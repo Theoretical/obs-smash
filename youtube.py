@@ -158,4 +158,4 @@ def resumable_upload(insert_request):
       time.sleep(sleep_seconds)
 
 if __name__ == '__main__':
-    print("No... Run gui.py")
+    print("No... Run obs-smash.py")
