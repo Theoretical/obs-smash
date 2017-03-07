@@ -1,5 +1,6 @@
 # obs-smash
 OBS manager for Smash4 (or any other smash game)
+![Preview](http://puu.sh/uxTSZ/0f68f52a47.png)
 
 # OBS
 The OBS included is a manually compiled OBS with a custom obs-websocket.dll to add scene item management.
