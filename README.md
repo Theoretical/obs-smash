@@ -1,5 +1,12 @@
 # obs-smash
 OBS manager for Smash4 (or any other smash game)
+
+* Pulls matches from challonge and auto updates stream matches based on winner.
+* Speaks to OBS using obs-websocket.
+* Auto-uploads VODs to youtube account provided.
+* Easily manageable via tablet or phone.
+
+
 ![Preview](http://puu.sh/uxTSZ/0f68f52a47.png)
 
 # OBS
