@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, render_template, request, Response
 from flask_cors import CORS, cross_origin
-from json import loads
+from json import dumps, loads
 from multiprocessing import Process, Queue
 from oauth2client.tools import argparser
 from os import listdir, rename
@@ -41,6 +41,20 @@ def main_page():
     lan_ip = gethostbyname(hostname)
     return render_template('smash.html', ip=lan_ip, config=config)
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings_page():
+    if request.method == 'POST':
+        global config
+
+        config = loads(request.form['settings'])
+        open('config.json', 'w').write(dumps(config, indent=4))
+
+        print('Reloaded settings file!')
+        return jsonify({})
+
+    hostname = gethostname()
+    lan_ip = gethostbyname(hostname)
+    return render_template('settings.html', ip=lan_ip)
 
 @app.route('/challonge/find', methods=['POST'])
 def challonge_find():

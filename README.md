@@ -34,4 +34,3 @@ Note: changing sprites is a pain but check out ddData in templates/smash.html
 [Flask](https://pypi.python.org/pypi/Flask) (pip install flask) Tested with 0.12
 
 [Flask Cors](https://pypi.python.org/pypi/Flask-Cors) (pip install flask_cors) Tested with 3.0.2
-

@@ -1,0 +1,111 @@
+<html>
+    <head>
+        <title>Salty Sundays Stream Manager</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="static/jquery.ddslick.min.js"></script>
+        <script src="static/reconnecting-websocket.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(function(){
+                $("#settings").click(function(e)
+                {
+                    var settings = Object();
+                    settings.RECORDING_DIRECTORY = $("#recordingPath").val();
+                    settings.CHALLONGE_API_KEY = $("#challongeApiKey").val();
+                    settings.SPRITE_PATH = $("#spritePath").val();
+                    settings.YOUTUBE_DESCRIPTION = $("#youtubeDescription").val();
+                    settings.YOUTUBE_KEYWORDS = $("#youtubeKeywords").val();
+                    settings.TWITCH_CHAT = $("#twitchChat").val();
+                    var scene = Object();
+                    scene.MatchType = $("#matchType").val()
+                    scene.Player1Name = $("#p1name").val();
+                    scene.Player2Name = $("#p2name").val();
+                    scene.Player1Score = $("#p1score").val();
+                    scene.Player2Score = $("#p2score").val();
+                    scene.Player1Character = $("#p1char").val();
+                    scene.Player2Character = $("#p2char").val();
+
+                    settings.scene = scene;
+                    $.post('http://{{ ip }}:5000/settings', {'settings': JSON.stringify(settings)});
+                });
+            });
+        </script>
+        <body>
+            <div class="container" style="margin-top: 10px;">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Setting</th>
+                            <th>Input</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Twitch Chat</td>
+                            <td><input type="text" class="form-control" id="twitchChat" placeholder="http://www.twitch.tv/kappahaute/chat"</td>
+                        </tr>
+                        <tr>
+                            <td>OBS Recording Path</td>
+                            <td><input type="text" class="form-control" id="recordingPath" placeholder="X:/vods/"</td>
+                        </tr>
+                        <tr>
+                            <td>OBS Image Path</td>
+                            <td><input type="text" class="form-control" id="spritePath" placeholder="C:/Users/Everance/Desktop/sprites/"</td>
+                        </tr>
+                        <tr>
+                            <td>Youtube Description</td>
+                            <td><input type="text" class="form-control" id="youtubeDescription" placeholder="Terre Haute Salty Sundays"</td>
+                        </tr>
+                        <tr>
+                            <td>Youtube Keywords (Comma seperated.)</td>
+                            <td><input type="text" class="form-control" id="youtubeKeywords" placeholder="Smash 4, Super Smash Bros., Weekly, Tournament"</td>
+                        </tr>
+                        <tr>
+                            <td>Challonge API Key</td>
+                            <td><input type="password" class="form-control" id="challongeApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></td>
+                        </tr>
+                    </tbody>
+                    <thead>
+                        <tr>
+                            <th>OBS Scene</th>
+                            <th>Input</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Match Type</td>
+                            <td><input type="text" class="form-control" id="matchType" placeholder="matchType"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 1 Name</td>
+                            <td><input type="text" class="form-control" id="p1name" placeholder="p1Name"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 2 Name</td>
+                            <td><input type="text" class="form-control" id="p2name" placeholder="p2name"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 1 Score</td>
+                            <td><input type="text" class="form-control" id="p1score" placeholder="p1score"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 2 Score</td>
+                            <td><input type="text" class="form-control" id="p2score" placeholder="p2score"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 1 Character</td>
+                            <td><input type="text" class="form-control" id="p1char" placeholder="p1char"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 2 Character</td>
+                            <td><input type="text" class="form-control" id="p2char" placeholder="p2char"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="settings" class="btn btn-default">Save</button>
+            </div>
+        </body>
+    </head>
+</html>
