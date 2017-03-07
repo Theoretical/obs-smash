@@ -1,5 +1,5 @@
 # obs-smash
-OBS manager for Smash4 (or any other smash game)
+OBS manager for Smash4 (or any other smash game) using Python 3.
 
 * Pulls matches from challonge and auto updates stream matches based on winner.
 * Speaks to OBS using obs-websocket.
