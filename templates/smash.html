@@ -1,0 +1,340 @@
+<html>
+    <head>
+        <title>Salty Sundays Stream Manager</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="static/jquery.ddslick.min.js"></script>
+        <script src="static/reconnecting-websocket.min.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script>
+
+            // Todo: eventually make this dynamic.
+            var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
+            var players = {};
+            var players_reverse = {};
+            var matches = {};
+            var image_path = '{{ config.SPRITE_PATH }}'
+            var player1_score = 0;
+            var player2_score = 0;
+            var is_recording = false;
+
+            function update_scene_item(name, value, type){
+                cmd = {
+                    'request-type': 'ModifySceneItem',
+                    'scene-name': name,
+                    'scene-value': value,
+                    'scene-type': type
+                }
+                ws.send(JSON.stringify(cmd));
+            }
+
+            function start_stop_recording(){
+                is_recording = !is_recording;
+                console.log('Recording: ' + is_recording);
+                ws.send(JSON.stringify({'request-type': 'StartStopRecording'}));
+
+                if (!is_recording)
+                {
+                    if (!$("#manualmatches").prop('checked')) {
+                        var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                        var match = matches[match_id];
+                        $.post('http://{{ ip }}:5000/recording/stop', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                    } else {
+                        $.post('http://{{ ip }}:5000/recording/stop', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                    }
+                }
+            }
+
+            $(document).ready(function() {
+                $("body").on('click', '.dropdown-menu li a', function(){
+                    // hacky
+                    var id = $(this).parents(".dropdown-menu").prop("id");
+
+                    $(this).parents(".btn-group").find('.btn').html($(this).text() + ' <span class="caret"></span>');
+                    $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
+
+                    console.log(id);
+                    if (id == "matches")
+                    {
+                        var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                        var match = matches[match_id];
+
+                        $("#p1label").text(match[0]);
+                        $("#p2label").text(match[1]);
+                        $("#player1Name").val(match[0]);
+                        $("#player2Name").val(match[1]);
+                    }
+                });
+
+                $("#playerswap").click(function()
+                {
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+
+                    var newPlayerOne = match[1];
+                    var newPlayerTwo = match[0];
+
+                    matches[match_id] = [newPlayerOne, newPlayerTwo];
+                    var match = matches[match_id];
+
+                    $("#p1label").text(match[0]);
+                    $("#p2label").text(match[1]);
+                    $("#player1Name").val(match[0]);
+                    $("#player2Name").val(match[1]);
+                });
+
+                var ddData = [{'text': 'Bayonetta', 'value': 'bayonetta.png', 'imageSrc': 'static/sprites/bayonetta.png'}, {'text': 'Bowser', 'value': 'bowser.png', 'imageSrc': 'static/sprites/bowser.png'}, {'text': 'Bowserjr', 'value': 'bowserjr.png', 'imageSrc': 'static/sprites/bowserjr.png'}, {'text': 'Captainfalcon', 'value': 'captainfalcon.png', 'imageSrc': 'static/sprites/captainfalcon.png'}, {'text': 'Charizard', 'value': 'charizard.png', 'imageSrc': 'static/sprites/charizard.png'}, {'text': 'Cloud', 'value': 'cloud.png', 'imageSrc': 'static/sprites/cloud.png'}, {'text': 'Corrin', 'value': 'corrin.png', 'imageSrc': 'static/sprites/corrin.png'}, {'text': 'Darkpit', 'value': 'darkpit.png', 'imageSrc': 'static/sprites/darkpit.png'}, {'text': 'Dedede', 'value': 'dedede.png', 'imageSrc': 'static/sprites/dedede.png'}, {'text': 'Diddy', 'value': 'diddy.png', 'imageSrc': 'static/sprites/diddy.png'}, {'text': 'Doubles Blue', 'value': 'DoublesBlue.png', 'imageSrc': 'static/sprites/DoublesBlue.png'}, {'text': 'Doubles Green', 'value': 'DoublesGreen.png', 'imageSrc': 'static/sprites/DoublesGreen.png'}, {'text': 'Doubles Red', 'value': 'DoublesRed.png', 'imageSrc': 'static/sprites/DoublesRed.png'},  {'text': 'Donkey', 'value': 'donkey.png', 'imageSrc': 'static/sprites/donkey.png'}, {'text': 'Drmario', 'value': 'drmario.png', 'imageSrc': 'static/sprites/drmario.png'}, {'text': 'Duckhunt', 'value': 'duckhunt.png', 'imageSrc': 'static/sprites/duckhunt.png'}, {'text': 'Falco', 'value': 'falco.png', 'imageSrc': 'static/sprites/falco.png'}, {'text': 'Fox', 'value': 'fox.png', 'imageSrc': 'static/sprites/fox.png'}, {'text': 'Gamewatch', 'value': 'gamewatch.png', 'imageSrc': 'static/sprites/gamewatch.png'}, {'text': 'Ganon', 'value': 'ganon.png', 'imageSrc': 'static/sprites/ganon.png'}, {'text': 'Greninja', 'value': 'greninja.png', 'imageSrc': 'static/sprites/greninja.png'}, {'text': 'Ike', 'value': 'ike.png', 'imageSrc': 'static/sprites/ike.png'}, {'text': 'Jigglypuff', 'value': 'jigglypuff.png', 'imageSrc': 'static/sprites/jigglypuff.png'}, {'text': 'Kirby', 'value': 'kirby.png', 'imageSrc': 'static/sprites/kirby.png'}, {'text': 'Link', 'value': 'link.png', 'imageSrc': 'static/sprites/link.png'}, {'text': 'Littlemac', 'value': 'littlemac.png', 'imageSrc': 'static/sprites/littlemac.png'}, {'text': 'Lucario', 'value': 'lucario.png', 'imageSrc': 'static/sprites/lucario.png'}, {'text': 'Lucas', 'value': 'lucas.png', 'imageSrc': 'static/sprites/lucas.png'}, {'text': 'Lucina', 'value': 'lucina.png', 'imageSrc': 'static/sprites/lucina.png'}, {'text': 'Luigi', 'value': 'luigi.png', 'imageSrc': 'static/sprites/luigi.png'}, {'text': 'Luma', 'value': 'luma.png', 'imageSrc': 'static/sprites/luma.png'}, {'text': 'Malecorrin', 'value': 'malecorrin.png', 'imageSrc': 'static/sprites/malecorrin.png'}, {'text': 'Mario', 'value': 'mario.png', 'imageSrc': 'static/sprites/mario.png'}, {'text': 'Marth', 'value': 'marth.png', 'imageSrc': 'static/sprites/marth.png'}, {'text': 'Megaman', 'value': 'megaman.png', 'imageSrc': 'static/sprites/megaman.png'}, {'text': 'Metaknight', 'value': 'metaknight.png', 'imageSrc': 'static/sprites/metaknight.png'}, {'text': 'Mewtwo', 'value': 'mewtwo.png', 'imageSrc': 'static/sprites/mewtwo.png'}, {'text': 'Miibrawler', 'value': 'miibrawler.png', 'imageSrc': 'static/sprites/miibrawler.png'}, {'text': 'Miigunner', 'value': 'miigunner.png', 'imageSrc': 'static/sprites/miigunner.png'}, {'text': 'Miiswordsman', 'value': 'miiswordsman.png', 'imageSrc': 'static/sprites/miiswordsman.png'}, {'text': 'Ness', 'value': 'ness.png', 'imageSrc': 'static/sprites/ness.png'}, {'text': 'Pacman', 'value': 'pacman.png', 'imageSrc': 'static/sprites/pacman.png'}, {'text': 'Palutena', 'value': 'palutena.png', 'imageSrc': 'static/sprites/palutena.png'}, {'text': 'Peach', 'value': 'peach.png', 'imageSrc': 'static/sprites/peach.png'}, {'text': 'Pikachu', 'value': 'pikachu.png', 'imageSrc': 'static/sprites/pikachu.png'}, {'text': 'Pikmin', 'value': 'pikmin.png', 'imageSrc': 'static/sprites/pikmin.png'}, {'text': 'Pit', 'value': 'pit.png', 'imageSrc': 'static/sprites/pit.png'}, {'text': 'Random', 'value': 'random.png', 'imageSrc': 'static/sprites/random.png'}, {'text': 'Rob', 'value': 'rob.png', 'imageSrc': 'static/sprites/rob.png'}, {'text': 'Roy', 'value': 'roy.png', 'imageSrc': 'static/sprites/roy.png'}, {'text': 'Ryu', 'value': 'ryu.png', 'imageSrc': 'static/sprites/ryu.png'}, {'text': 'Samus', 'value': 'samus.png', 'imageSrc': 'static/sprites/samus.png'}, {'text': 'Sheik', 'value': 'sheik.png', 'imageSrc': 'static/sprites/sheik.png'}, {'text': 'Shulk', 'value': 'shulk.png', 'imageSrc': 'static/sprites/shulk.png'}, {'text': 'Sonic', 'value': 'sonic.png', 'imageSrc': 'static/sprites/sonic.png'}, {'text': 'Toonlink', 'value': 'toonlink.png', 'imageSrc': 'static/sprites/toonlink.png'}, {'text': 'Villager', 'value': 'villager.png', 'imageSrc': 'static/sprites/villager.png'}, {'text': 'Wario', 'value': 'wario.png', 'imageSrc': 'static/sprites/wario.png'}, {'text': 'Wiifit', 'value': 'wiifit.png', 'imageSrc': 'static/sprites/wiifit.png'}, {'text': 'Yoshi', 'value': 'yoshi.png', 'imageSrc': 'static/sprites/yoshi.png'}, {'text': 'Zelda', 'value': 'zelda.png', 'imageSrc': 'static/sprites/zelda.png'}, {'text': 'Zerosuitsamus', 'value': 'zerosuitsamus.png', 'imageSrc': 'static/sprites/zerosuitsamus.png'}];
+                $("#player1char").ddslick({
+                    data: ddData,
+                    width: 300,
+                    selectText: 'Select Player 1\'s character',
+                    imagePosition:"right",
+                    onSelected: function(selectedData){
+                        data = selectedData.selectedData;
+                        $('#player1val').val(data.value);
+                    }
+                });
+
+                $("#player2char").ddslick({
+                    data: ddData,
+                    width: 300,
+                    selectText: 'Select Player 2\'s character',
+                    imagePosition:"right",
+                    onSelected: function(selectedData){
+                        data = selectedData.selectedData;
+                        $('#player2val').val(data.value);
+                    }
+                });
+
+                $("#matchstatus").click(function(){
+                    var val = $("#matchstatus").val();
+
+                    if (val == 'start'){
+                        $("#matchstatus").text('Stop match!');
+                        $("#matchstatus").val('stop');
+                        player1_score = 0
+                        player2_score = 0;
+                        $("#stream").click();
+                        start_stop_recording();
+                    }
+                    else
+                    {
+                        $("#matchstatus").text('Start match!');
+                        $("#matchstatus").val('start');
+                        if (!$("#manualmatches").prop('checked'))
+                            $("#on_challonge").click();
+                        $("#stream").click();
+                        start_stop_recording();
+                    }
+                });
+
+                $("#stream").click(function(){
+                    // This is very barebones right now.
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+
+                    if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                    {
+                        update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
+                        update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                    }
+                    else {
+                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
+                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                    }
+                    update_scene_item('{{ config.scene.Player1Character }}', image_path + $('#player1val').val(), 'file');
+                    update_scene_item('{{ config.scene.Player2Character }}', image_path + $('#player2val').val(), 'file');
+                    update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
+                    update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                    update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+
+                    player_victory =  $('#victory:checked').val();
+                    $('#victory:checked').prop('checked', false);
+                    if (player_victory != null)
+                    {
+                        if (player_victory == 'p1')
+                            player1_score += 1;
+                        else
+                            player2_score += 1;
+
+                        update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
+                        update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                        score = player1_score + '-' + player2_score
+
+                        var winner = ''
+                        var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
+
+                        if (player1_score == setcount)
+                            winner = players_reverse[match[0]]
+                        else if(player2_score == setcount)
+                            winner = players_reverse[match[1]]
+
+                        if (!$("#manualmatches").prop('checked'))
+                            $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
+                    }
+
+                });
+
+                $("#on_name").click(function(e)
+                {
+                    e.preventDefault();
+                    var name = $("#tournamentname").val();
+                    $.post('http://{{ ip }}:5000/name', {'name': name}, function(json) {});
+                });
+
+                $("#on_challonge").click(function(e) {
+                    e.preventDefault();
+                    var challonge_id = $("#challonge").val();
+
+                    // Build data set of players.
+                    $.post('http://{{ ip }}:5000/challonge/find', {'url': challonge_id}, function(json) {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var participant = json[i]['participant'];
+                            players[participant['id']] = participant['display_name'];
+                            players_reverse[participant['display_name']] = participant['id'];
+                        }
+                    });
+
+                    // Build data set of matches.
+                    $.post('http://{{ ip }}:5000/challonge/matches', {}, function(json) {
+                        $('#matches')
+                            .find('li')
+                            .remove()
+                            .end()
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var match = json[i]['match'];
+
+                            // this is fucking stupid.
+                            var player_one = players[match['player1_id']];
+                            var player_two = players[match['player2_id']];
+
+                            var match_str = player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+
+                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                        }
+                    });
+                });
+            });
+
+        </script>
+    </head>
+    <body>
+        <div class="container" style="margin-top: 10px;">
+            <div class="input-group">
+                <input type="text" class="form-control" id="challonge" placeholder="Challonge link">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" id="on_challonge">Fetch matches</button>
+                </span>
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control" id="tournamentname" placeholder="Tournament Name">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" id="on_name">Set Name</button>
+                </span>
+            </div>
+            <br/>
+            <div class="btn-group">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    Player Matches
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1" id="matches">
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Set Type
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2" id="settype">
+                    <li value="2"><a href="#" data-value="2">BO3</a></li>
+                    <li value="3"><a href="#" data-value="3">BO5</a></li>
+                </ul>
+          </div>
+          <div class="btn-group">
+              <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Match Type
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu3" id="matchtype">
+                  <li><a href="#" data-><a href="#" data-value="(Friendlies)">(Friendlies)</a></li>
+                  <li><a href="#" data-><a href="#" data-value="Friendlies">Friendlies</a></li>
+                  <li><a href="#" data-value="[W] Round 1">[W] Round 1</a></li>
+                  <li><a href="#" data-value="[W] Round 2">[W] Round 2</a></li>
+                  <li><a href="#" data-value="[W] Round 3">[W] Round 3</a></li>
+                  <li><a href="#" data-value="[W] Round 4">[W] Round 4</a></li>
+                  <li><a href="#" data-value="[W] Round 5">[W] Round 5</a></li>
+                  <li><a href="#" data-value="[W] Round 6">[W] Round 6</a></li>
+                  <li><a href="#" data-value="Winners Quarters">Winners Quarters</a></li>
+                  <li><a href="#" data-value="Winners Semis">Winners Semis</a></li>
+                  <li><a href="#" data-value="Winners Finals">Winners Finals</a></li>
+                  <li><a href="#" data-value="[L] Round 1">[L] Round 1</a></li>
+                  <li><a href="#" data-value="[L] Round 2">[L] Round 2</a></li>
+                  <li><a href="#" data-value="[L] Round 3">[L] Round 3</a></li>
+                  <li><a href="#" data-value="[L] Round 4">[L] Round 4</a></li>
+                  <li><a href="#" data-value="[L] Round 5">[L] Round 5</a></li>
+                  <li><a href="#" data-value="[L] Round 6">[L] Round 6</a></li>
+                  <li><a href="#" data-value="Losers Quarters">Losers Quarters</a></li>
+                  <li><a href="#" data-value="Losers Semis">Losers Semis</a></li>
+                  <li><a href="#" data-value="Losers Finals">Losers Finals</a></li>
+                  <li><a href="#" data-value="Grand Finals">Grand Finals</a></li>
+                  <li><a href="#" data-value="Grand Finals [Set 2]">Grand Finals [Set 2]</a></li>
+                  <li><a href="#" data-value="M$ney M$tch">M$ney M$tch</a></li>
+                  <li><a href="#" data-value="Pineapple Pizza CB">Pineapple Pizza CB</a></li>
+              </ul>
+          </div>
+            <br/><br/>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Friendlies </th>
+                    <th>Use table instead.</th>
+                    <th><input type="checkbox" id="manualmatches" checked/></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>Player 1: </td><td><input type="text" class="form-control" placeholder="Everance" aria-describedby="basic-addon1" id="player1Name"/></td>
+                <tr><td>Player 2: </td><td><input type="text" class="form-control" placeholder="Mr. Postman" aria-describedby="basic-addon1" id="player2Name"/></td></tr>
+            </tbody>
+            </tr>
+        </table>
+
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-success" id="matchstatus" value="start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start match</button>
+            <button type="button" class="btn btn-info" id="stream"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Update Stream</button>
+            <button type="button" class="btn btn-danger" id="playerswap"><span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span> Swap players</button>
+        </div>
+
+        <br/><br/>
+        <input type="hidden" id="player1val" />
+        <input type="hidden" id="player2val" />
+        <div style="width:950px">
+            <div id="player1" style="float: left">
+                <div id="wrapper1" style="float: left">
+                    <div id="player1char"></div>
+                </div>
+                <div style="float: right; line-height: 45px;padding-left: 10px;">
+                    <input type="radio" name="victory" id="victory" value="p1"/> Winner <span class="label label-info" id="p1label"></span>
+                </div>
+            </div>
+
+            <div id="player2" style="float: right">
+                <div style="float: left">
+                    <div id="player2char"></div>
+                </div>
+                <div style="float: right; line-height: 45px;padding-left: 10px;">
+                    <input type="radio" name="victory" id="victory" value="p2"/> Winner <span class="label label-danger" id="p2label"></span>
+                </div>
+            </div>
+        </div>
+        </div>
+        <br/> <br/>
+        <div class="container">
+            <iframe frameborder="0" scrolling="no" id="chat_embed" src="http://www.twitch.tv/kappahaute/chat" height="500" width="350"></iframe>
+        </div>
+    </body>
+</html>

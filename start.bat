@@ -1,0 +1,1 @@
+python obs-smash.py
