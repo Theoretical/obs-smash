@@ -9,45 +9,31 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <script>
 
-            // Todo: eventually make this dynamic.
-            var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
-
-            function WriteToFile() {
-              set fso = CreateObject("Scripting.FileSystemObject");
-              set s = fso.CreateTextFile("/home/rwhited/test.txt", True);
-              s.writeline("Test");
-              s.Close();
-            }
-
         </script>
         <body>
-          <form class="form-horizontal">
-            <div class="form-group">
-              <label for="youtubeJsonFile" class="col-sm-2 control-label">YouTube's client_secrets.json file</label>
-              <div class="col-sm-10">
-                <input type="file" id="smashggApiKey">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="challongeApiKey" class="col-sm-2 control-label">Challonge API Key</label>
-              <div class="col-sm-10">
-                <input type="password" class="form-control" id="challongeApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="smashggApiKey" class="col-sm-2 control-label">Smash.gg API Key (Not Currently Needed)</label>
-              <div class="col-sm-10">
-                <input type="password" class="form-control" id="smashggApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX">
-              </div>
-            </div>
-            <div class="form-group">
-              <label for="twitchChat" class="col-sm-2 control-label">Twitch Chat URL</label>
-              <div class="col-sm-10">
-                <input type="text" class="form-control" id="twitchChat" placeholder="http://www.twitch.tv/kappahaute/chat">
-              </div>
-            </div>
-            <button type="save" class="btn btn-default">Submit</button>
-          </form>
+          <table class="table table-bordered"
+            <tr>
+              <th>Setting</th>
+              <th>Input</th>
+            </tr>
+            <tr>
+              <th>Twitch Chat</th>
+              <td><input type="text" class="form-control" id="twitchChat" placeholder="http://www.twitch.tv/kappahaute/chat"</td>
+            </tr>
+            <tr>
+              <th>Challonge API Key</th>
+              <td><input type="password" class="form-control" id="challongeApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></td>
+            </tr>
+            <tr>
+              <th>Smash.gg API Key (Not Currently Needed)</td>
+              <td><input type="password" class="form-control" id="smashggApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></td>
+            </tr>
+            <tr>
+              <th>YouTube's client_secrets.json File</td>
+              <td><input type="file" id="ytJsonFile">
+          </table>
+          <button type="save" class="btn btn-default">Save</button>
+
         </body>
   </head>
 </html>

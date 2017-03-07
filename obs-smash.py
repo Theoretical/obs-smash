@@ -79,6 +79,12 @@ def name():
     CHALLONGE_TOURNAMENT_NAME = request.form['name']
     return jsonify({})
 
+@app.route('/settings', methods=['GET', 'POST'])
+def settings_page():
+    #if request.method == 'POST':
+        #stuff
+    return render_template('settings.html')
+
 @app.route('/recording/stop', methods=['POST'])
 def recording_stop():
     global CHALLONGE_TOURNAMENT_NAME, YOUTUBE_QUEUE
