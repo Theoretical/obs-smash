@@ -59,6 +59,12 @@ def settings_page():
     lan_ip = gethostbyname(hostname)
     return render_template('settings.html', ip=lan_ip)
 
+@app.route('/settings/config', methods=['GET'])
+def config_info():
+    configDict = loads(open('config.json', 'r').read())
+
+    return jsonify(configDict)
+
 @app.route('/match/events', methods=['POST'])
 def get_events():
     global SMASH_GG, TOURNAMENT_ID

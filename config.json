@@ -1,17 +1,16 @@
 {
-    "RECORDING_DIRECTORY": "X:\\vods\\",
+    "RECORDING_DIRECTORY": "",
     "CHALLONGE_API_KEY": "",
-    "SPRITE_PATH": "C:/Users/Everance/Desktop/sprites/",
-    "YOUTUBE_DESCRIPTION": "Terre Haute Salty Sundays",
-    "YOUTUBE_KEYWORDS": "Smash 4, Super Smash Bros., Weekly, Tournament",
-    "TWITCH_CHAT": "http://www.twitch.tv/kappahaute/chat",
-    "scene":
-    {
+    "SPRITE_PATH": "",
+    "YOUTUBE_DESCRIPTION": "",
+    "YOUTUBE_KEYWORDS": "",
+    "TWITCH_CHAT": "",
+    "scene": {
+        "MatchType": "matchType",
         "Player1Name": "p1name",
         "Player2Name": "p2name",
         "Player1Score": "p1score",
         "Player2Score": "p2score",
-        "MatchType": "matchType",
         "Player1Character": "p1char",
         "Player2Character": "p2char"
     }
