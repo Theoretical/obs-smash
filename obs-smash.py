@@ -69,7 +69,7 @@ def get_events():
     slug = url.split('/')[-1]
 
     TOURNAMENT_ID = slug
-    res = get('https://api.smash.gg/tournament/{slug}?expand[]=event'.format(slug=slug))
+    res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=phase'.format(slug=slug))
     return jsonify(res.json())
 
 
@@ -101,22 +101,6 @@ def get_players():
     res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=entrants&expand[]=phase&expand[]=groups'.format(slug=TOURNAMENT_ID))
     TOURNAMENT_NAME = res.json()['entities']['tournament']['name']
 
-    data = res.json()
-    phase_ids = []
-
-    for phase in data['entities']['phase']:
-
-        print('[%s] vs [%s]' % (phase['eventId'], request.form['event']))
-        if phase['eventId'] != int(request.form['event']):
-            continue
-        phase_ids.append(phase['id'])
-
-    for group in data['entities']['groups']:
-        if group['phaseId'] not in phase_ids:
-           continue
-        TOURNAMENT_PHASES.append(group['id'])
-
-
     return jsonify(res.json())
 
 
@@ -128,8 +112,16 @@ def get_brackets():
         data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=CHALLONGE_TOURNAMENT_ID, key=CHALLONGE_API_KEY)).json()
         return jsonify(data)
 
+
+    groups = []
+    res = get('https://api.smash.gg/tournament/{slug}?expand[]=groups'.format(slug=TOURNAMENT_ID))
+    for group in res.json()['entities']['groups']:
+        if group['phaseId'] == int(request.form['phase']):
+            groups.append(group['id'])
+
+    data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=request.form['phase'])).json()
     sets = []
-    for phase in TOURNAMENT_PHASES:
+    for phase in groups:
         print('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase))
         data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase)).json()
         sets.extend(data['entities']['sets'])

@@ -18,6 +18,7 @@
             var player1_score = 0;
             var player2_score = 0;
             var is_recording = false;
+            var phases = [];
 
             function update_scene_item(name, value, type){
                 cmd = {
@@ -55,7 +56,13 @@
                     $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
 
                     console.log(id);
-                    if (id == "matches")
+                    if (id == "smashgg_events")
+                        get_phases();
+
+                    else if (id = "smashgg_phases")
+                        $("#on_challonge").click();
+
+                    else if (id == "matches")
                     {
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
                         var match = matches[match_id];
@@ -189,6 +196,7 @@
                     var url = $("#challonge").val();
 
                     $.post('http://{{ ip }}:5000/match/events', {'url': url}, function(json) {
+                        phases = json['entities']['phase'];
                         for(i = 0; i < json['entities']['event'].length; i++)
                         {
                             var ev = json['entities']['event'][i];
@@ -198,6 +206,22 @@
                     });
                     //smashgg_events
                 });
+
+                function get_phases(){
+                    var ev = Number($("#smashgg_events").parents(".btn-group").find('.btn').val());
+                    $('#smashgg_phases')
+                        .find('li')
+                        .remove()
+                        .end()
+                    for (i = 0; i < phases.length; i++)
+                    {
+                        if (phases[i]['eventId'] == ev)
+                        {
+                            $("#smashgg_phases").append('<li><a href="#" data-value="' + phases[i]['id'] + '">' + phases[i]['name'] + '</a></li>');
+                        }
+                    }
+                }
+
                 $("#on_challonge").click(function(e) {
                     e.preventDefault();
                     var challonge_id = $("#challonge").val();
@@ -222,8 +246,6 @@
                                 var p = player_objs[i];
                                 if (p == undefined) { break; }
 
-                                if(p['entrant2PrereqType'] == 'bye')
-                                    continue;
                                 players[p['id']] = p['name'];
                                 players_reverse[p['name']] = p['id'];
                             }
@@ -231,7 +253,7 @@
                     });
 
                     // Build data set of matches.
-                    $.post('http://{{ ip }}:5000/match/brackets', {}, function(json) {
+                    $.post('http://{{ ip }}:5000/match/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
                         $('#matches')
                             .find('li')
                             .remove()
@@ -257,7 +279,7 @@
                             {
                                 var match = json[i];
 
-                                if (match['entrant2PrereqType'] == 'bye')
+                                if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
                                     continue
 
                                 var player_one = players[match['entrant1Id']];
@@ -301,6 +323,14 @@
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu4" id="smashgg_events">
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Phases
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_phases">
                 </ul>
             </div>
             <div class="btn-group">
