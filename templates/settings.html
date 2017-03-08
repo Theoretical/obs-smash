@@ -33,22 +33,22 @@
             });
         </script>
         <script>
-          $(function() {
+            $(function() {
 
-            $.getJSON('./settings/config', function(data) {
-              document.getElementsByName("configTwitchChat")[0].value=data.TWITCH_CHAT;
-              document.getElementsByName("configRec")[0].value=data.RECORDING_DIRECTORY;
-              document.getElementsByName("configImg")[0].value=data.SPRITE_PATH;
-              document.getElementsByName("configYTDesc")[0].value=data.YOUTUBE_DESCRIPTION;
-              document.getElementsByName("configYTKey")[0].value=data.YOUTUBE_KEYWORDS;
-              document.getElementsByName("configChallonge")[0].value=data.CHALLONGE_API_KEY;
-              document.getElementsByName("configMatch")[0].value=data.scene.MatchType;
-              document.getElementsByName("configP1Name")[0].value=data.scene.Player1Name;
-              document.getElementsByName("configP2Name")[0].value=data.scene.Player2Name;
-              document.getElementsByName("configP1Score")[0].value=data.scene.Player1Score;
-              document.getElementsByName("configP2Score")[0].value=data.scene.Player2Score;
-              document.getElementsByName("configP1Char")[0].value=data.scene.Player1Character;
-              document.getElementsByName("configP2Char")[0].value=data.scene.Player2Character;
+                $.getJSON('./settings/config', function(data) {
+                    $("#twitchChat").val(data.TWITCH_CHAT);
+                    $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
+                    $("#spritePath").val(data.SPRITE_PATH);
+                    $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
+                    $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
+                    $("#recordingPath").val(data.RECORDING_DIRECTORY);
+                    $("#matchType").val(data.scene.MatchType);
+                    $("#p1name").val(data.scene.Player1Name);
+                    $("#p2name").val(data.scene.Player2Name);
+                    $("#p1score").val(data.scene.Player1Score);
+                    $("#p2score").val(data.scene.Player2Score);
+                    $("#p1char").val(data.scene.Player1Character);
+                    $("#p2char").val(data.scene.Player1Character);
             });
           });
         </script>
