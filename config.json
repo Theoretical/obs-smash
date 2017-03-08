@@ -12,6 +12,6 @@
         "Player1Score": "p1score",
         "Player2Score": "p2score",
         "Player1Character": "p1char",
-        "Player2Character": "p2char"
+        "Player2Character": "p1char"
     }
 }
