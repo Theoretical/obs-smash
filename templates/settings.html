@@ -9,6 +9,24 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <script>
             $(document).ready(function(){
+                $(function() {
+                    $.getJSON('./settings/config', function(data) {
+                        $("#twitchChat").val(data.TWITCH_CHAT);
+                        $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
+                        $("#spritePath").val(data.SPRITE_PATH);
+                        $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
+                        $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
+                        $("#recordingPath").val(data.RECORDING_DIRECTORY);
+                        $("#matchType").val(data.scene.MatchType);
+                        $("#p1name").val(data.scene.Player1Name);
+                        $("#p2name").val(data.scene.Player2Name);
+                        $("#p1score").val(data.scene.Player1Score);
+                        $("#p2score").val(data.scene.Player2Score);
+                        $("#p1char").val(data.scene.Player1Character);
+                        $("#p2char").val(data.scene.Player1Character);
+                    });
+                  });
+
                 $("#settings").click(function(e)
                 {
                     var settings = Object();
@@ -31,25 +49,6 @@
                     $.post('http://{{ ip }}:5000/settings', {'settings': JSON.stringify(settings)});
                 });
             });
-        </script>
-        <script>
-            $(function() {
-                $.getJSON('./settings/config', function(data) {
-                    $("#twitchChat").val(data.TWITCH_CHAT);
-                    $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
-                    $("#spritePath").val(data.SPRITE_PATH);
-                    $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
-                    $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
-                    $("#recordingPath").val(data.RECORDING_DIRECTORY);
-                    $("#matchType").val(data.scene.MatchType);
-                    $("#p1name").val(data.scene.Player1Name);
-                    $("#p2name").val(data.scene.Player2Name);
-                    $("#p1score").val(data.scene.Player1Score);
-                    $("#p2score").val(data.scene.Player2Score);
-                    $("#p1char").val(data.scene.Player1Character);
-                    $("#p2char").val(data.scene.Player1Character);
-            });
-          });
         </script>
         <body>
             <div class="container" style="margin-top: 10px;">
