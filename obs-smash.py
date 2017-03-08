@@ -17,8 +17,11 @@ CORS(app)
 
 config = loads(open('config.json', 'r').read())
 CHALLONGE_API_KEY = config['CHALLONGE_API_KEY'] # Sam
-CHALLONGE_TOURNAMENT_ID = ''
-CHALLONGE_TOURNAMENT_NAME = ''
+TOURNAMENT_ID = ''
+TOURNAMENT_NAME = ''
+TOURNAMENT_EVENT = None
+TOURNAMENT_PHASES = []
+SMASH_GG = False
 RECORDING_DIRECTORY = config['RECORDING_DIRECTORY']
 argparser.add_argument("--file", required=True)
 argparser.add_argument("--title")
@@ -56,29 +59,81 @@ def settings_page():
     lan_ip = gethostbyname(hostname)
     return render_template('settings.html', ip=lan_ip)
 
-@app.route('/challonge/find', methods=['POST'])
-def challonge_find():
-    global CHALLONGE_TOURNAMENT_ID, CHALLONGE_TOURNAMENT_NAME
+@app.route('/settings/config', methods=['GET'])
+def config_info():
+    configDict = loads(open('config.json', 'r').read())
+
+    return jsonify(configDict)
+
+@app.route('/match/events', methods=['POST'])
+def get_events():
+    global SMASH_GG, TOURNAMENT_ID
+    SMASH_GG = True
     url = request.form['url']
-    parsed = urlparse(url)
 
-    team = parsed.netloc.strip('www.').split('.')[0]
-    team = team + '-' if team != 'challonge' else ''
+    if url[-1] == '/': url = url[:-1]
+    slug = url.split('/')[-1]
 
-    challonge_id = team + parsed.path[1:]
-    CHALLONGE_TOURNAMENT_ID = challonge_id
+    TOURNAMENT_ID = slug
+    res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=phase'.format(slug=slug))
+    return jsonify(res.json())
 
-    res = get('https://api.challonge.com/v1/tournaments/{id}.json?api_key={key}'.format(id=challonge_id, key=CHALLONGE_API_KEY))
 
-    CHALLONGE_TOURNAMENT_NAME = res.json()['tournament']['name']
-    print ('%s | %s' % (challonge_id, team))
-    return jsonify(get('https://api.challonge.com/v1/tournaments/{id}/participants.json?api_key={key}'.format(id=challonge_id, key=CHALLONGE_API_KEY)).json())
+@app.route('/match/players', methods=['POST'])
+def get_players():
+    global TOURNAMENT_ID, TOURNAMENT_NAME, SMASH_GG, TOURNAMENT_PHASES
+    url = request.form['url']
 
-@app.route('/challonge/matches', methods=['POST'])
-def challonge_matches():
-    global CHALLONGE_TOURNAMENT_ID
-    data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=CHALLONGE_TOURNAMENT_ID, key=CHALLONGE_API_KEY)).json()
-    return jsonify(data)
+    if 'smash.gg' not in url:
+        parsed = urlparse(url)
+
+        team = parsed.netloc.strip('www.').split('.')[0]
+        team = team + '-' if team != 'challonge' else ''
+
+        challonge_id = team + parsed.path[1:]
+        TOURNAMENT_ID = challonge_id
+
+        res = get('https://api.challonge.com/v1/tournaments/{id}.json?api_key={key}'.format(id=challonge_id, key=CHALLONGE_API_KEY))
+
+        TOURNAMENT_NAME = res.json()['tournament']['name']
+        print ('%s | %s' % (challonge_id, team))
+        return jsonify(get('https://api.challonge.com/v1/tournaments/{id}/participants.json?api_key={key}'.format(id=challonge_id, key=CHALLONGE_API_KEY)).json())
+
+    # smash.gg logic.
+    TOURNAMENT_PHASES = []
+    SMASH_GG = True
+
+    event_slug = url.split('smash.gg/')[1].split('/overview')[0].replace('/events/', '/event/')
+    res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=entrants&expand[]=phase&expand[]=groups'.format(slug=TOURNAMENT_ID))
+    TOURNAMENT_NAME = res.json()['entities']['tournament']['name']
+
+    return jsonify(res.json())
+
+
+
+@app.route('/match/brackets', methods=['POST'])
+def get_brackets():
+    global TOURNAMENT_ID, TOURNAMENT_PHASES
+    if not SMASH_GG:
+        data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=CHALLONGE_TOURNAMENT_ID, key=CHALLONGE_API_KEY)).json()
+        return jsonify(data)
+
+
+    groups = []
+    res = get('https://api.smash.gg/tournament/{slug}?expand[]=groups'.format(slug=TOURNAMENT_ID))
+    for group in res.json()['entities']['groups']:
+        if group['phaseId'] == int(request.form['phase']):
+            groups.append(group['id'])
+
+    data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=request.form['phase'])).json()
+    sets = []
+    for phase in groups:
+        print('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase))
+        data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase)).json()
+        sets.extend(data['entities']['sets'])
+
+    return jsonify(sets)
+
 
 @app.route('/challonge/update', methods=['POST'])
 def challonge_update():

@@ -18,6 +18,7 @@
             var player1_score = 0;
             var player2_score = 0;
             var is_recording = false;
+            var phases = [];
 
             function update_scene_item(name, value, type){
                 cmd = {
@@ -55,7 +56,13 @@
                     $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
 
                     console.log(id);
-                    if (id == "matches")
+                    if (id == "smashgg_events")
+                        get_phases();
+
+                    else if (id = "smashgg_phases")
+                        $("#on_challonge").click();
+
+                    else if (id == "matches")
                     {
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
                         var match = matches[match_id];
@@ -183,38 +190,110 @@
                     $.post('http://{{ ip }}:5000/name', {'name': name}, function(json) {});
                 });
 
+                $("#on_events").click(function(e)
+                {
+                    e.preventDefault();
+                    var url = $("#challonge").val();
+
+                    $.post('http://{{ ip }}:5000/match/events', {'url': url}, function(json) {
+                        phases = json['entities']['phase'];
+                        for(i = 0; i < json['entities']['event'].length; i++)
+                        {
+                            var ev = json['entities']['event'][i];
+                            $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
+
+                        }
+                    });
+                    //smashgg_events
+                });
+
+                function get_phases(){
+                    var ev = Number($("#smashgg_events").parents(".btn-group").find('.btn').val());
+                    $('#smashgg_phases')
+                        .find('li')
+                        .remove()
+                        .end()
+                    for (i = 0; i < phases.length; i++)
+                    {
+                        if (phases[i]['eventId'] == ev)
+                        {
+                            $("#smashgg_phases").append('<li><a href="#" data-value="' + phases[i]['id'] + '">' + phases[i]['name'] + '</a></li>');
+                        }
+                    }
+                }
+
                 $("#on_challonge").click(function(e) {
                     e.preventDefault();
                     var challonge_id = $("#challonge").val();
+                    var ev = $("#smashgg_events").parents(".btn-group").find('.btn').val();
 
                     // Build data set of players.
-                    $.post('http://{{ ip }}:5000/challonge/find', {'url': challonge_id}, function(json) {
-                        for (i = 0; i < json.length; i++)
+                    $.post('http://{{ ip }}:5000/match/players', {'url': challonge_id, 'event': ev}, function(json) {
+                        if (challonge_id.includes('challonge'))
                         {
-                            var participant = json[i]['participant'];
-                            players[participant['id']] = participant['display_name'];
-                            players_reverse[participant['display_name']] = participant['id'];
+                            for (i = 0; i < json.length; i++)
+                            {
+                                var participant = json[i]['participant'];
+                                players[participant['id']] = participant['display_name'];
+                                players_reverse[participant['display_name']] = participant['id'];
+                            }
+                        }
+                        else
+                        {
+                            var player_objs = json['entities']['entrants'];
+                            for (i = 0; i < player_objs.length; i++)
+                            {
+                                var p = player_objs[i];
+                                if (p == undefined) { break; }
+
+                                players[p['id']] = p['name'];
+                                players_reverse[p['name']] = p['id'];
+                            }
                         }
                     });
 
                     // Build data set of matches.
-                    $.post('http://{{ ip }}:5000/challonge/matches', {}, function(json) {
+                    $.post('http://{{ ip }}:5000/match/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
                         $('#matches')
                             .find('li')
                             .remove()
                             .end()
-                        for (i = 0; i < json.length; i++)
+
+                        if (challonge_id.includes('challonge'))
                         {
-                            var match = json[i]['match'];
+                            for (i = 0; i < json.length; i++)
+                            {
+                                var match = json[i]['match'];
 
-                            // this is fucking stupid.
-                            var player_one = players[match['player1_id']];
-                            var player_two = players[match['player2_id']];
+                                var player_one = players[match['player1_id']];
+                                var player_two = players[match['player2_id']];
 
-                            var match_str = player_one + ' VS. ' + player_two;
-                            matches[match['id']] = [player_one, player_two];
+                                var match_str = player_one + ' VS. ' + player_two;
+                                matches[match['id']] = [player_one, player_two];
 
-                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                                $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                            }
+                        }
+                        else {
+                            for (i = 0; i < json.length; i++)
+                            {
+                                var match = json[i];
+
+                                if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                    continue
+
+                                var player_one = players[match['entrant1Id']];
+                                var player_two = players[match['entrant2Id']];
+
+                                if (player_one == undefined || player_two == undefined)
+                                    console.log(i);
+
+                                var match_str = player_one + ' VS. ' + player_two;
+                                matches[match['id']] = [player_one, player_two];
+
+                                $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+
+                            }
                         }
                     });
                 });
@@ -227,26 +306,31 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="challonge" placeholder="Challonge link">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" id="on_challonge">Fetch matches</button>
+                    <button class="btn btn-default" type="button" id="on_challonge">Get Challonge Matches</button>
+                    <button class="btn btn-info" type="button" id="on_events">Get SmashGG Events</button>
                 </span>
             </div>
             <div class="input-group">
                 <input type="text" class="form-control" id="tournamentname" placeholder="Tournament Name">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" id="on_name">Set Name</button>
+                    <button class="btn btn-default" type="button" id="on_name">Set Tournament Name</button>
                 </span>
             </div>
             <br/>
             <div class="btn-group">
                 <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                    Game
+                    SmashGG Events
                     <span class="caret"></span>
                 </button>
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenu4" id="games">
-                  <li value="2"><a href="#" data-value="2">64</a></li>
-                  <li value="3"><a href="#" data-value="3">Melee</a></li>
-                  <li value="4"><a href="#" data-value="4">Wii U</a></li>
-                  <li value="5"><a href="#" data-value="5">Other</a></li>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu4" id="smashgg_events">
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Phases
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_phases">
                 </ul>
             </div>
             <div class="btn-group">
@@ -298,6 +382,9 @@
                   <li><a href="#" data-value="M$ney M$tch">M$ney M$tch</a></li>
                   <li><a href="#" data-value="Pineapple Pizza CB">Pineapple Pizza CB</a></li>
               </ul>
+          </div>
+          <div class="btn-group pull-right">
+            <a href='/settings' class="btn btn-default" role="button">Settings</a>
           </div>
             <br/><br/>
             <table class="table table-striped">
