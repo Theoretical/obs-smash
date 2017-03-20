@@ -40,9 +40,9 @@
                     if (!$("#manualmatches").prop('checked')) {
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
                         var match = matches[match_id];
-                        $.post('http://{{ ip }}:5000/recording/stop', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                        $.post('http://{{ ip }}:5000/match/end', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
                     } else {
-                        $.post('http://{{ ip }}:5000/recording/stop', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                        $.post('http://{{ ip }}:5000/match/end', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
                     }
                 }
             }
@@ -59,19 +59,31 @@
                     if (id == "smashgg_events")
                         get_phases();
 
-                    else if (id = "smashgg_phases")
-                        $("#on_challonge").click();
+                    if (id == "smashgg_phases")
+                        on_challonge();
 
-                    else if (id == "matches")
+                    if (id == "matches")
                     {
+                        console.log('a');
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                        console.log('b');
                         var match = matches[match_id];
 
+                        console.log('c');
                         $("#p1label").text(match[0]);
                         $("#p2label").text(match[1]);
                         $("#player1Name").val(match[0]);
                         $("#player2Name").val(match[1]);
+                        console.log('d');
+                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
+                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                        $("#manualmatches").prop('checked', false);
                     }
+                });
+
+                $('#challonge').on('input propertychange paste', function() {
+                    if ($("#challonge").val() == '') return;
+                    on_challonge();
                 });
 
                 $("#playerswap").click(function()
@@ -89,9 +101,20 @@
                     $("#p2label").text(match[1]);
                     $("#player1Name").val(match[0]);
                     $("#player2Name").val(match[1]);
+
+                    if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                    {
+                        update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
+                        update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                    }
+                    else {
+                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
+                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                    }
                 });
 
                 var ddData = [{'text': 'Bayonetta', 'value': 'bayonetta.png', 'imageSrc': 'static/sprites/bayonetta.png'}, {'text': 'Bowser', 'value': 'bowser.png', 'imageSrc': 'static/sprites/bowser.png'}, {'text': 'Bowserjr', 'value': 'bowserjr.png', 'imageSrc': 'static/sprites/bowserjr.png'}, {'text': 'Captainfalcon', 'value': 'captainfalcon.png', 'imageSrc': 'static/sprites/captainfalcon.png'}, {'text': 'Charizard', 'value': 'charizard.png', 'imageSrc': 'static/sprites/charizard.png'}, {'text': 'Cloud', 'value': 'cloud.png', 'imageSrc': 'static/sprites/cloud.png'}, {'text': 'Corrin', 'value': 'corrin.png', 'imageSrc': 'static/sprites/corrin.png'}, {'text': 'Darkpit', 'value': 'darkpit.png', 'imageSrc': 'static/sprites/darkpit.png'}, {'text': 'Dedede', 'value': 'dedede.png', 'imageSrc': 'static/sprites/dedede.png'}, {'text': 'Diddy', 'value': 'diddy.png', 'imageSrc': 'static/sprites/diddy.png'}, {'text': 'Doubles Blue', 'value': 'DoublesBlue.png', 'imageSrc': 'static/sprites/DoublesBlue.png'}, {'text': 'Doubles Green', 'value': 'DoublesGreen.png', 'imageSrc': 'static/sprites/DoublesGreen.png'}, {'text': 'Doubles Red', 'value': 'DoublesRed.png', 'imageSrc': 'static/sprites/DoublesRed.png'},  {'text': 'Donkey', 'value': 'donkey.png', 'imageSrc': 'static/sprites/donkey.png'}, {'text': 'Drmario', 'value': 'drmario.png', 'imageSrc': 'static/sprites/drmario.png'}, {'text': 'Duckhunt', 'value': 'duckhunt.png', 'imageSrc': 'static/sprites/duckhunt.png'}, {'text': 'Falco', 'value': 'falco.png', 'imageSrc': 'static/sprites/falco.png'}, {'text': 'Fox', 'value': 'fox.png', 'imageSrc': 'static/sprites/fox.png'}, {'text': 'Gamewatch', 'value': 'gamewatch.png', 'imageSrc': 'static/sprites/gamewatch.png'}, {'text': 'Ganon', 'value': 'ganon.png', 'imageSrc': 'static/sprites/ganon.png'}, {'text': 'Greninja', 'value': 'greninja.png', 'imageSrc': 'static/sprites/greninja.png'}, {'text': 'Ike', 'value': 'ike.png', 'imageSrc': 'static/sprites/ike.png'}, {'text': 'Jigglypuff', 'value': 'jigglypuff.png', 'imageSrc': 'static/sprites/jigglypuff.png'}, {'text': 'Kirby', 'value': 'kirby.png', 'imageSrc': 'static/sprites/kirby.png'}, {'text': 'Link', 'value': 'link.png', 'imageSrc': 'static/sprites/link.png'}, {'text': 'Littlemac', 'value': 'littlemac.png', 'imageSrc': 'static/sprites/littlemac.png'}, {'text': 'Lucario', 'value': 'lucario.png', 'imageSrc': 'static/sprites/lucario.png'}, {'text': 'Lucas', 'value': 'lucas.png', 'imageSrc': 'static/sprites/lucas.png'}, {'text': 'Lucina', 'value': 'lucina.png', 'imageSrc': 'static/sprites/lucina.png'}, {'text': 'Luigi', 'value': 'luigi.png', 'imageSrc': 'static/sprites/luigi.png'}, {'text': 'Luma', 'value': 'luma.png', 'imageSrc': 'static/sprites/luma.png'}, {'text': 'Malecorrin', 'value': 'malecorrin.png', 'imageSrc': 'static/sprites/malecorrin.png'}, {'text': 'Mario', 'value': 'mario.png', 'imageSrc': 'static/sprites/mario.png'}, {'text': 'Marth', 'value': 'marth.png', 'imageSrc': 'static/sprites/marth.png'}, {'text': 'Megaman', 'value': 'megaman.png', 'imageSrc': 'static/sprites/megaman.png'}, {'text': 'Metaknight', 'value': 'metaknight.png', 'imageSrc': 'static/sprites/metaknight.png'}, {'text': 'Mewtwo', 'value': 'mewtwo.png', 'imageSrc': 'static/sprites/mewtwo.png'}, {'text': 'Miibrawler', 'value': 'miibrawler.png', 'imageSrc': 'static/sprites/miibrawler.png'}, {'text': 'Miigunner', 'value': 'miigunner.png', 'imageSrc': 'static/sprites/miigunner.png'}, {'text': 'Miiswordsman', 'value': 'miiswordsman.png', 'imageSrc': 'static/sprites/miiswordsman.png'}, {'text': 'Ness', 'value': 'ness.png', 'imageSrc': 'static/sprites/ness.png'}, {'text': 'Pacman', 'value': 'pacman.png', 'imageSrc': 'static/sprites/pacman.png'}, {'text': 'Palutena', 'value': 'palutena.png', 'imageSrc': 'static/sprites/palutena.png'}, {'text': 'Peach', 'value': 'peach.png', 'imageSrc': 'static/sprites/peach.png'}, {'text': 'Pikachu', 'value': 'pikachu.png', 'imageSrc': 'static/sprites/pikachu.png'}, {'text': 'Pikmin', 'value': 'pikmin.png', 'imageSrc': 'static/sprites/pikmin.png'}, {'text': 'Pit', 'value': 'pit.png', 'imageSrc': 'static/sprites/pit.png'}, {'text': 'Random', 'value': 'random.png', 'imageSrc': 'static/sprites/random.png'}, {'text': 'Rob', 'value': 'rob.png', 'imageSrc': 'static/sprites/rob.png'}, {'text': 'Roy', 'value': 'roy.png', 'imageSrc': 'static/sprites/roy.png'}, {'text': 'Ryu', 'value': 'ryu.png', 'imageSrc': 'static/sprites/ryu.png'}, {'text': 'Samus', 'value': 'samus.png', 'imageSrc': 'static/sprites/samus.png'}, {'text': 'Sheik', 'value': 'sheik.png', 'imageSrc': 'static/sprites/sheik.png'}, {'text': 'Shulk', 'value': 'shulk.png', 'imageSrc': 'static/sprites/shulk.png'}, {'text': 'Sonic', 'value': 'sonic.png', 'imageSrc': 'static/sprites/sonic.png'}, {'text': 'Toonlink', 'value': 'toonlink.png', 'imageSrc': 'static/sprites/toonlink.png'}, {'text': 'Villager', 'value': 'villager.png', 'imageSrc': 'static/sprites/villager.png'}, {'text': 'Wario', 'value': 'wario.png', 'imageSrc': 'static/sprites/wario.png'}, {'text': 'Wiifit', 'value': 'wiifit.png', 'imageSrc': 'static/sprites/wiifit.png'}, {'text': 'Yoshi', 'value': 'yoshi.png', 'imageSrc': 'static/sprites/yoshi.png'}, {'text': 'Zelda', 'value': 'zelda.png', 'imageSrc': 'static/sprites/zelda.png'}, {'text': 'Zerosuitsamus', 'value': 'zerosuitsamus.png', 'imageSrc': 'static/sprites/zerosuitsamus.png'}];
+
                 $("#player1char").ddslick({
                     data: ddData,
                     width: 300,
@@ -130,7 +153,7 @@
                         $("#matchstatus").text('Start match!');
                         $("#matchstatus").val('start');
                         if (!$("#manualmatches").prop('checked'))
-                            $("#on_challonge").click();
+                            on_challonge();
                         $("#stream").click();
                         start_stop_recording();
                     }
@@ -187,7 +210,7 @@
                 {
                     e.preventDefault();
                     var name = $("#tournamentname").val();
-                    $.post('http://{{ ip }}:5000/name', {'name': name}, function(json) {});
+                    $.post('http://{{ ip }}:5000/tournament/name', {'name': name}, function(json) {});
                 });
 
                 $("#on_events").click(function(e)
@@ -195,7 +218,7 @@
                     e.preventDefault();
                     var url = $("#challonge").val();
 
-                    $.post('http://{{ ip }}:5000/match/events', {'url': url}, function(json) {
+                    $.post('http://{{ ip }}:5000/tournament/events', {'url': url}, function(json) {
                         phases = json['entities']['phase'];
                         for(i = 0; i < json['entities']['event'].length; i++)
                         {
@@ -222,13 +245,17 @@
                     }
                 }
 
-                $("#on_challonge").click(function(e) {
-                    e.preventDefault();
+                function on_challonge() {
                     var challonge_id = $("#challonge").val();
                     var ev = $("#smashgg_events").parents(".btn-group").find('.btn').val();
 
+                    if (challonge_id.includes('challonge'))
+                    {
+                        $("#smashgg-event-div").hide()
+                        $("#smashgg-phase-div").hide()
+                    }
                     // Build data set of players.
-                    $.post('http://{{ ip }}:5000/match/players', {'url': challonge_id, 'event': ev}, function(json) {
+                    $.post('http://{{ ip }}:5000/tournament/players', {'url': challonge_id, 'event': ev}, function(json) {
                         if (challonge_id.includes('challonge'))
                         {
                             for (i = 0; i < json.length; i++)
@@ -253,7 +280,7 @@
                     });
 
                     // Build data set of matches.
-                    $.post('http://{{ ip }}:5000/match/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
+                    $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
                         $('#matches')
                             .find('li')
                             .remove()
@@ -296,7 +323,7 @@
                             }
                         }
                     });
-                });
+                }
             });
 
         </script>
@@ -306,7 +333,7 @@
             <div class="input-group">
                 <input type="text" class="form-control" id="challonge" placeholder="Challonge link">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" id="on_challonge">Get Challonge Matches</button>
+                    <button class="btn btn-default" type="button">Get Challonge Matches</button>
                     <button class="btn btn-info" type="button" id="on_events">Get SmashGG Events</button>
                 </span>
             </div>
@@ -317,7 +344,7 @@
                 </span>
             </div>
             <br/>
-            <div class="btn-group">
+            <div class="btn-group" id="smashgg-event-div">
                 <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                     SmashGG Events
                     <span class="caret"></span>
@@ -325,7 +352,7 @@
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu4" id="smashgg_events">
                 </ul>
             </div>
-            <div class="btn-group">
+            <div class="btn-group" id="smashgg-phase-div">
                 <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                     SmashGG Phases
                     <span class="caret"></span>
