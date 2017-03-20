@@ -115,7 +115,7 @@ def get_players():
 def get_brackets():
     global TOURNAMENT_ID, TOURNAMENT_PHASES
     if not SMASH_GG:
-        data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=CHALLONGE_TOURNAMENT_ID, key=CHALLONGE_API_KEY)).json()
+        data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=TOURNAMENT_ID, key=CHALLONGE_API_KEY)).json()
         return jsonify(data)
 
 
@@ -138,19 +138,19 @@ def get_brackets():
 @app.route('/challonge/update', methods=['POST'])
 def challonge_update():
     global CHALLONGE_TOURNAMENT_ID
-    url = 'https://api.challonge.com/v1/tournaments/{id}/matches/{match}.json?api_key={key}&match[scores_csv]={score}&match[winner_id]={winner}'.format(id=CHALLONGE_TOURNAMENT_ID, match=request.form['match'],
+    url = 'https://api.challonge.com/v1/tournaments/{id}/matches/{match}.json?api_key={key}&match[scores_csv]={score}&match[winner_id]={winner}'.format(id=TOURNAMENT_ID, match=request.form['match'],
         key=CHALLONGE_API_KEY, score=request.form['score'], winner=request.form['winner'])
     return jsonify(put(url).json())
 
 @app.route('/name', methods=['POST'])
 def name():
-    global CHALLONGE_TOURNAMENT_NAME
-    CHALLONGE_TOURNAMENT_NAME = request.form['name']
+    global TOURNAMENT_NAME
+    TOURNAMENT_NAME = request.form['name']
     return jsonify({})
 
 @app.route('/recording/stop', methods=['POST'])
 def recording_stop():
-    global CHALLONGE_TOURNAMENT_NAME, YOUTUBE_QUEUE
+    global TOURNAMENT_NAME, YOUTUBE_QUEUE
     sleep(4) # Sleep for 4s to make sure our recording is saved.
 
     file_list = [join(RECORDING_DIRECTORY, f) for f in listdir(RECORDING_DIRECTORY) if isfile(join(RECORDING_DIRECTORY, f))]
@@ -162,11 +162,11 @@ def recording_stop():
     matchType = request.form['matchType']
 
     # recording name. (max 100 char.)
-    recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament}'.format(matchType=matchType, player1=player1, player2=player2, tournament=CHALLONGE_TOURNAMENT_NAME))[:100]
+    recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament}'.format(matchType=matchType, player1=player1, player2=player2, tournament=TOURNAMENT_NAME))[:100]
 
     n = 1
     while join(RECORDING_DIRECTORY, recording_name + '.mp4') in file_list:
-        recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament} ({n})'.format(matchType=matchType, player1=player1, player2=player2, tournament=CHALLONGE_TOURNAMENT_NAME, n=n))[:100]
+        recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament} ({n})'.format(matchType=matchType, player1=player1, player2=player2, tournament=TOURNAMENT_NAME, n=n))[:100]
         n += 1
 
     file_name = join(RECORDING_DIRECTORY, recording_name + '.mp4')

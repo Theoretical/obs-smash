@@ -9,6 +9,24 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <script>
             $(document).ready(function(){
+                $(function() {
+                    $.getJSON('./settings/config', function(data) {
+                        $("#twitchChat").val(data.TWITCH_CHAT);
+                        $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
+                        $("#spritePath").val(data.SPRITE_PATH);
+                        $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
+                        $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
+                        $("#recordingPath").val(data.RECORDING_DIRECTORY);
+                        $("#matchType").val(data.scene.MatchType);
+                        $("#p1name").val(data.scene.Player1Name);
+                        $("#p2name").val(data.scene.Player2Name);
+                        $("#p1score").val(data.scene.Player1Score);
+                        $("#p2score").val(data.scene.Player2Score);
+                        $("#p1char").val(data.scene.Player1Character);
+                        $("#p2char").val(data.scene.Player1Character);
+                    });
+                  });
+
                 $("#settings").click(function(e)
                 {
                     var settings = Object();
@@ -32,26 +50,6 @@
                 });
             });
         </script>
-        <script>
-            $(function() {
-
-                $.getJSON('./settings/config', function(data) {
-                    $("#twitchChat").val(data.TWITCH_CHAT);
-                    $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
-                    $("#spritePath").val(data.SPRITE_PATH);
-                    $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
-                    $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
-                    $("#recordingPath").val(data.RECORDING_DIRECTORY);
-                    $("#matchType").val(data.scene.MatchType);
-                    $("#p1name").val(data.scene.Player1Name);
-                    $("#p2name").val(data.scene.Player2Name);
-                    $("#p1score").val(data.scene.Player1Score);
-                    $("#p2score").val(data.scene.Player2Score);
-                    $("#p1char").val(data.scene.Player1Character);
-                    $("#p2char").val(data.scene.Player1Character);
-            });
-          });
-        </script>
         <body>
             <div class="container" style="margin-top: 10px;">
                 <table class="table table-striped">
@@ -64,27 +62,27 @@
                     <tbody>
                         <tr>
                             <td>Twitch Chat</td>
-                            <td><input name="configTwitchChat" type="text" class="form-control" id="twitchChat" placeholder="http://www.twitch.tv/kappahaute/chat"</td>
+                            <td><input type="text" class="form-control" id="twitchChat" placeholder="http://www.twitch.tv/kappahaute/chat"</td>
                         </tr>
                         <tr>
                             <td>OBS Recording Path</td>
-                            <td><input name="configRec" type"text" class="form-control" id="recordingPath" placeholder="X:/vods/"</td>
+                            <td><input type"text" class="form-control" id="recordingPath" placeholder="X:/vods/"</td>
                         </tr>
                         <tr>
                             <td>OBS Image Path</td>
-                            <td><input name="configImg" type="text" class="form-control" id="spritePath" placeholder="C:/Users/Everance/Desktop/sprites/"</td>
+                            <td><input type="text" class="form-control" id="spritePath" placeholder="C:/Users/Everance/Desktop/sprites/"</td>
                         </tr>
                         <tr>
                             <td>Youtube Description</td>
-                            <td><input name="configYTDesc" type="text" class="form-control" id="youtubeDescription" placeholder="Terre Haute Salty Sundays"</td>
+                            <td><input type="text" class="form-control" id="youtubeDescription" placeholder="Terre Haute Salty Sundays"</td>
                         </tr>
                         <tr>
                             <td>Youtube Keywords (Comma seperated.)</td>
-                            <td><input name="configYTKey" type="text" class="form-control" id="youtubeKeywords" placeholder="Smash 4, Super Smash Bros., Weekly, Tournament"</td>
+                            <td><input type="text" class="form-control" id="youtubeKeywords" placeholder="Smash 4, Super Smash Bros., Weekly, Tournament"</td>
                         </tr>
                         <tr>
                             <td>Challonge API Key</td>
-                            <td><input name="configChallonge" type="password" class="form-control" id="challongeApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></td>
+                            <td><input type="password" class="form-control" id="challongeApiKey" placeholder="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"></td>
                         </tr>
                     </tbody>
                     <thead>
@@ -96,31 +94,31 @@
                     <tbody>
                         <tr>
                             <td>Match Type</td>
-                            <td><input name="configMatch" type="text" class="form-control" id="matchType" placeholder="matchType"></td>
+                            <td><input type="text" class="form-control" id="matchType" placeholder="matchType"></td>
                         </tr>
                         <tr>
                             <td>Player 1 Name</td>
-                            <td><input name="configP1Name" type="text" class="form-control" id="p1name" placeholder="p1Name"></td>
+                            <td><input type="text" class="form-control" id="p1name" placeholder="p1Name"></td>
                         </tr>
                         <tr>
                             <td>Player 2 Name</td>
-                            <td><input name="configP2Name" type="text" class="form-control" id="p2name" placeholder="p2name"></td>
+                            <td><input type="text" class="form-control" id="p2name" placeholder="p2name"></td>
                         </tr>
                         <tr>
                             <td>Player 1 Score</td>
-                            <td><input name="configP1Score" type="text" class="form-control" id="p1score" placeholder="p1score"></td>
+                            <td><input type="text" class="form-control" id="p1score" placeholder="p1score"></td>
                         </tr>
                         <tr>
                             <td>Player 2 Score</td>
-                            <td><input name="configP2Score" type="text" class="form-control" id="p2score" placeholder="p2score"></td>
+                            <td><input type="text" class="form-control" id="p2score" placeholder="p2score"></td>
                         </tr>
                         <tr>
                             <td>Player 1 Character</td>
-                            <td><input name="configP1Char" type="text" class="form-control" id="p1char" placeholder="p1char"></td>
+                            <td><input type="text" class="form-control" id="p1char" placeholder="p1char"></td>
                         </tr>
                         <tr>
                             <td>Player 2 Character</td>
-                            <td><input name="configP2Char" type="text" class="form-control" id="p2char" placeholder="p2char"></td>
+                            <td><input type="text" class="form-control" id="p2char" placeholder="p2char"></td>
                         </tr>
                     </tbody>
                 </table>
