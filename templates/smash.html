@@ -64,17 +64,13 @@
 
                     if (id == "matches")
                     {
-                        console.log('a');
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
-                        console.log('b');
                         var match = matches[match_id];
 
-                        console.log('c');
                         $("#p1label").text(match[0]);
                         $("#p2label").text(match[1]);
                         $("#player1Name").val(match[0]);
                         $("#player2Name").val(match[1]);
-                        console.log('d');
                         update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
                         update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
                         $("#manualmatches").prop('checked', false);
