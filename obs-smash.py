@@ -61,7 +61,7 @@ class Tournament(object):
         return render_template('smash.html', ip=lan_ip, config=self.config)
 
     def on_settings(self):
-        if request.method != 'POST':
+        if request.method == 'POST':
             self.config = loads(request.form['settings'])
             open('config.json', 'w').write(dumps(config, indent=4))
 
@@ -174,7 +174,7 @@ class Tournament(object):
             '--keywords', self.config['YOUTUBE_KEYWORDS']
         ])
 
-        #YOUTUBE_QUEUE.put(youtube_args)
+        YOUTUBE_QUEUE.put(youtube_args)
         return jsonify({})
 
 if __name__ == '__main__':
