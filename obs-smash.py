@@ -170,11 +170,11 @@ class Tournament(object):
         youtube_args = argparser.parse_args([
             '--file', file_name,
             '--title', recording_name,
-            '--description', config['YOUTUBE_DESCRIPTION'],
-            '--keywords', config['YOUTUBE_KEYWORDS']
+            '--description', self.config['YOUTUBE_DESCRIPTION'],
+            '--keywords', self.config['YOUTUBE_KEYWORDS']
         ])
 
-        YOUTUBE_QUEUE.put(youtube_args)
+        #YOUTUBE_QUEUE.put(youtube_args)
         return jsonify({})
 
 if __name__ == '__main__':

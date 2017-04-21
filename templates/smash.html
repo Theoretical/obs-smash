@@ -2,11 +2,24 @@
     <head>
         <title>Salty Sundays Stream Manager</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <script src="static/jquery.ddslick.min.js"></script>
         <script src="static/reconnecting-websocket.min.js"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <style>
+            #feedback { font-size: 1.4em; }
+            #selectable .ui-selecting {  border-style: solid; border-color: green; border-width: medium;}
+            #selectable .ui-selected {  border-style: solid; border-color: green; border-width: medium;}
+            #selectable { list-style-type: none; margin: 0; padding: 0; width: 450px;}
+            #selectable li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
+            #selectable2 .ui-selecting {  border-style: solid; border-color: red; border-width: medium;}
+            #selectable2 .ui-selected {  border-style: solid; border-color: red; border-width: medium;}
+            #selectable2 { list-style-type: none; margin: 0; padding: 0; width: 450px;}
+            #selectable2 li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
+        </style>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <script>
 
             // Todo: eventually make this dynamic.
@@ -111,6 +124,25 @@
 
                 var ddData = [{'text': 'Bayonetta', 'value': 'bayonetta.png', 'imageSrc': 'static/sprites/bayonetta.png'}, {'text': 'Bowser', 'value': 'bowser.png', 'imageSrc': 'static/sprites/bowser.png'}, {'text': 'Bowserjr', 'value': 'bowserjr.png', 'imageSrc': 'static/sprites/bowserjr.png'}, {'text': 'Captainfalcon', 'value': 'captainfalcon.png', 'imageSrc': 'static/sprites/captainfalcon.png'}, {'text': 'Charizard', 'value': 'charizard.png', 'imageSrc': 'static/sprites/charizard.png'}, {'text': 'Cloud', 'value': 'cloud.png', 'imageSrc': 'static/sprites/cloud.png'}, {'text': 'Corrin', 'value': 'corrin.png', 'imageSrc': 'static/sprites/corrin.png'}, {'text': 'Darkpit', 'value': 'darkpit.png', 'imageSrc': 'static/sprites/darkpit.png'}, {'text': 'Dedede', 'value': 'dedede.png', 'imageSrc': 'static/sprites/dedede.png'}, {'text': 'Diddy', 'value': 'diddy.png', 'imageSrc': 'static/sprites/diddy.png'}, {'text': 'Doubles Blue', 'value': 'DoublesBlue.png', 'imageSrc': 'static/sprites/DoublesBlue.png'}, {'text': 'Doubles Green', 'value': 'DoublesGreen.png', 'imageSrc': 'static/sprites/DoublesGreen.png'}, {'text': 'Doubles Red', 'value': 'DoublesRed.png', 'imageSrc': 'static/sprites/DoublesRed.png'},  {'text': 'Donkey', 'value': 'donkey.png', 'imageSrc': 'static/sprites/donkey.png'}, {'text': 'Drmario', 'value': 'drmario.png', 'imageSrc': 'static/sprites/drmario.png'}, {'text': 'Duckhunt', 'value': 'duckhunt.png', 'imageSrc': 'static/sprites/duckhunt.png'}, {'text': 'Falco', 'value': 'falco.png', 'imageSrc': 'static/sprites/falco.png'}, {'text': 'Fox', 'value': 'fox.png', 'imageSrc': 'static/sprites/fox.png'}, {'text': 'Gamewatch', 'value': 'gamewatch.png', 'imageSrc': 'static/sprites/gamewatch.png'}, {'text': 'Ganon', 'value': 'ganon.png', 'imageSrc': 'static/sprites/ganon.png'}, {'text': 'Greninja', 'value': 'greninja.png', 'imageSrc': 'static/sprites/greninja.png'}, {'text': 'Ike', 'value': 'ike.png', 'imageSrc': 'static/sprites/ike.png'}, {'text': 'Jigglypuff', 'value': 'jigglypuff.png', 'imageSrc': 'static/sprites/jigglypuff.png'}, {'text': 'Kirby', 'value': 'kirby.png', 'imageSrc': 'static/sprites/kirby.png'}, {'text': 'Link', 'value': 'link.png', 'imageSrc': 'static/sprites/link.png'}, {'text': 'Littlemac', 'value': 'littlemac.png', 'imageSrc': 'static/sprites/littlemac.png'}, {'text': 'Lucario', 'value': 'lucario.png', 'imageSrc': 'static/sprites/lucario.png'}, {'text': 'Lucas', 'value': 'lucas.png', 'imageSrc': 'static/sprites/lucas.png'}, {'text': 'Lucina', 'value': 'lucina.png', 'imageSrc': 'static/sprites/lucina.png'}, {'text': 'Luigi', 'value': 'luigi.png', 'imageSrc': 'static/sprites/luigi.png'}, {'text': 'Luma', 'value': 'luma.png', 'imageSrc': 'static/sprites/luma.png'}, {'text': 'Malecorrin', 'value': 'malecorrin.png', 'imageSrc': 'static/sprites/malecorrin.png'}, {'text': 'Mario', 'value': 'mario.png', 'imageSrc': 'static/sprites/mario.png'}, {'text': 'Marth', 'value': 'marth.png', 'imageSrc': 'static/sprites/marth.png'}, {'text': 'Megaman', 'value': 'megaman.png', 'imageSrc': 'static/sprites/megaman.png'}, {'text': 'Metaknight', 'value': 'metaknight.png', 'imageSrc': 'static/sprites/metaknight.png'}, {'text': 'Mewtwo', 'value': 'mewtwo.png', 'imageSrc': 'static/sprites/mewtwo.png'}, {'text': 'Miibrawler', 'value': 'miibrawler.png', 'imageSrc': 'static/sprites/miibrawler.png'}, {'text': 'Miigunner', 'value': 'miigunner.png', 'imageSrc': 'static/sprites/miigunner.png'}, {'text': 'Miiswordsman', 'value': 'miiswordsman.png', 'imageSrc': 'static/sprites/miiswordsman.png'}, {'text': 'Ness', 'value': 'ness.png', 'imageSrc': 'static/sprites/ness.png'}, {'text': 'Pacman', 'value': 'pacman.png', 'imageSrc': 'static/sprites/pacman.png'}, {'text': 'Palutena', 'value': 'palutena.png', 'imageSrc': 'static/sprites/palutena.png'}, {'text': 'Peach', 'value': 'peach.png', 'imageSrc': 'static/sprites/peach.png'}, {'text': 'Pikachu', 'value': 'pikachu.png', 'imageSrc': 'static/sprites/pikachu.png'}, {'text': 'Pikmin', 'value': 'pikmin.png', 'imageSrc': 'static/sprites/pikmin.png'}, {'text': 'Pit', 'value': 'pit.png', 'imageSrc': 'static/sprites/pit.png'}, {'text': 'Random', 'value': 'random.png', 'imageSrc': 'static/sprites/random.png'}, {'text': 'Rob', 'value': 'rob.png', 'imageSrc': 'static/sprites/rob.png'}, {'text': 'Roy', 'value': 'roy.png', 'imageSrc': 'static/sprites/roy.png'}, {'text': 'Ryu', 'value': 'ryu.png', 'imageSrc': 'static/sprites/ryu.png'}, {'text': 'Samus', 'value': 'samus.png', 'imageSrc': 'static/sprites/samus.png'}, {'text': 'Sheik', 'value': 'sheik.png', 'imageSrc': 'static/sprites/sheik.png'}, {'text': 'Shulk', 'value': 'shulk.png', 'imageSrc': 'static/sprites/shulk.png'}, {'text': 'Sonic', 'value': 'sonic.png', 'imageSrc': 'static/sprites/sonic.png'}, {'text': 'Toonlink', 'value': 'toonlink.png', 'imageSrc': 'static/sprites/toonlink.png'}, {'text': 'Villager', 'value': 'villager.png', 'imageSrc': 'static/sprites/villager.png'}, {'text': 'Wario', 'value': 'wario.png', 'imageSrc': 'static/sprites/wario.png'}, {'text': 'Wiifit', 'value': 'wiifit.png', 'imageSrc': 'static/sprites/wiifit.png'}, {'text': 'Yoshi', 'value': 'yoshi.png', 'imageSrc': 'static/sprites/yoshi.png'}, {'text': 'Zelda', 'value': 'zelda.png', 'imageSrc': 'static/sprites/zelda.png'}, {'text': 'Zerosuitsamus', 'value': 'zerosuitsamus.png', 'imageSrc': 'static/sprites/zerosuitsamus.png'}];
 
+                $.each(ddData, function(index, value)
+                {
+                    $("#selectable").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                    $("#selectable2").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                });
+
+                $( "#selectable" ).selectable({
+                    selected:function(event, ui)
+                    {
+                        update_scene_item('{{ config.scene.Player1Character }}', image_path + $(ui.selected).attr('value'), 'file');
+                    }
+                });
+                $( "#selectable2" ).selectable({
+                    selected:function(event, ui)
+                    {
+                        update_scene_item('{{ config.scene.Player2Character }}', image_path + $(ui.selected).attr('value'), 'file');
+                    }
+                });
+
                 $("#player1char").ddslick({
                     data: ddData,
                     width: 300,
@@ -159,45 +191,45 @@
                     // This is very barebones right now.
                     var match_id = $("#matches").parents(".btn-group").find('.btn').val();
                     var match = matches[match_id];
+                    var player1_score = Number($("#p1Score").parents(".btn-group").find('.btn').val());
+                    var player2_score = Number($("#p2Score").parents(".btn-group").find('.btn').val());
 
                     if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
                     {
                         update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
                         update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                        $("#p1label").text($("#player1Name").val());
+                        $("#p2label").text($("#player2Name").val());
                     }
                     else {
                         update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
                         update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                        $("#p1label").text(match[0]);
+                        $("#p2label").text(match[1]);
                     }
-                    update_scene_item('{{ config.scene.Player1Character }}', image_path + $('#player1val').val(), 'file');
-                    update_scene_item('{{ config.scene.Player2Character }}', image_path + $('#player2val').val(), 'file');
+
                     update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
                     update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
                     update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
 
                     player_victory =  $('#victory:checked').val();
-                    $('#victory:checked').prop('checked', false);
-                    if (player_victory != null)
+
+                    update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
+                    update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                    score = player1_score + '-' + player2_score
+
+                    var winner = ''
+                    var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
+
+                    if (!$("#manualmatches").prop('checked'))
                     {
-                        if (player_victory == 'p1')
-                            player1_score += 1;
-                        else
-                            player2_score += 1;
-
-                        update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
-                        update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
-                        score = player1_score + '-' + player2_score
-
-                        var winner = ''
-                        var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
-
                         if (player1_score == setcount)
                             winner = players_reverse[match[0]]
                         else if(player2_score == setcount)
                             winner = players_reverse[match[1]]
 
-                        if (!$("#manualmatches").prop('checked'))
-                            $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
+                    if (!$("#manualmatches").prop('checked'))
+                        $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
                     }
 
                 });
@@ -434,22 +466,56 @@
         <br/><br/>
         <input type="hidden" id="player1val" />
         <input type="hidden" id="player2val" />
+
         <div style="width:950px">
+            <div style="float: left">
+                <div class="btn-group">
+                    <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu6" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        P1 Score
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu6" id="p1Score">
+                        <li><a href="#" data-><a href="#" data-value="0">0</a></li>
+                        <li><a href="#" data-><a href="#" data-value="1">1</a></li>
+                        <li><a href="#" data-><a href="#" data-value="2">2</a></li>
+                        <li><a href="#" data-><a href="#" data-value="3">3</a></li>
+                    </ul>
+                </div>
+                <span class="label label-success" id="p1label"></span>
+            </div>
+            <div style="float: right">
+                <div style="float: left; padding-right: 33px;">
+                    <span class="label label-danger" id="p2label"></span>
+                    <div class="btn-group">
+                        <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu7" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            P2 Score
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu7" id="p2Score">
+                            <li><a href="#" data-><a href="#" data-value="0">0</a></li>
+                            <li><a href="#" data-><a href="#" data-value="1">1</a></li>
+                            <li><a href="#" data-><a href="#" data-value="2">2</a></li>
+                            <li><a href="#" data-><a href="#" data-value="3">3</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br/><br/><br/>
+
+        <div style="width:950px" id="characterSelect">
             <div id="player1" style="float: left">
                 <div id="wrapper1" style="float: left">
-                    <div id="player1char"></div>
+                    <ol id="selectable">
+                    </o>
                 </div>
-                <div style="float: right; line-height: 45px;padding-left: 10px;">
-                    <input type="radio" name="victory" id="victory" value="p1"/> Winner <span class="label label-info" id="p1label"></span>
-                </div>
+
             </div>
 
             <div id="player2" style="float: right">
                 <div style="float: left">
-                    <div id="player2char"></div>
-                </div>
-                <div style="float: right; line-height: 45px;padding-left: 10px;">
-                    <input type="radio" name="victory" id="victory" value="p2"/> Winner <span class="label label-danger" id="p2label"></span>
+                    <ol id="selectable2">
+                    </o>
                 </div>
             </div>
         </div>
