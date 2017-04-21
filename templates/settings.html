@@ -14,6 +14,7 @@
                         $("#twitchChat").val(data.TWITCH_CHAT);
                         $("#challongeApiKey").val(data.CHALLONGE_API_KEY);
                         $("#spritePath").val(data.SPRITE_PATH);
+                        $("#spritePath2").val(data.SPRITE_PATH2);
                         $("#youtubeDescription").val(data.YOUTUBE_DESCRIPTION);
                         $("#youtubeKeywords").val(data.YOUTUBE_KEYWORDS);
                         $("#recordingPath").val(data.RECORDING_DIRECTORY);
@@ -33,6 +34,7 @@
                     settings.RECORDING_DIRECTORY = $("#recordingPath").val();
                     settings.CHALLONGE_API_KEY = $("#challongeApiKey").val();
                     settings.SPRITE_PATH = $("#spritePath").val();
+                    settings.SPRITE_PATH2 = $("#spritePath2").val();
                     settings.YOUTUBE_DESCRIPTION = $("#youtubeDescription").val();
                     settings.YOUTUBE_KEYWORDS = $("#youtubeKeywords").val();
                     settings.TWITCH_CHAT = $("#twitchChat").val();
@@ -71,6 +73,10 @@
                         <tr>
                             <td>OBS Image Path</td>
                             <td><input type="text" class="form-control" id="spritePath" placeholder="C:/Users/Everance/Desktop/sprites/"</td>
+                        </tr>
+                        <tr>
+                            <td>OBS Player 2 Image Path</td>
+                            <td><input type="text" class="form-control" id="spritePath2" placeholder="C:/Users/Everance/Desktop/sprites/"</td>
                         </tr>
                         <tr>
                             <td>Youtube Description</td>

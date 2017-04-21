@@ -27,7 +27,8 @@
             var players = {};
             var players_reverse = {};
             var matches = {};
-            var image_path = '{{ config.SPRITE_PATH }}'
+            var image_path = '{{ config.SPRITE_PATH }}';
+            var image_path2 = '{{ config.SPRITE_PATH2 }}';
             var player1_score = 0;
             var player2_score = 0;
             var is_recording = false;
@@ -139,7 +140,7 @@
                 $( "#selectable2" ).selectable({
                     selected:function(event, ui)
                     {
-                        update_scene_item('{{ config.scene.Player2Character }}', image_path + $(ui.selected).attr('value'), 'file');
+                        update_scene_item('{{ config.scene.Player2Character }}', image_path2 + $(ui.selected).attr('value'), 'file');
                     }
                 });
 
