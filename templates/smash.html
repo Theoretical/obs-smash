@@ -122,8 +122,8 @@
 
             $.each(ddData, function(index, value)
             {
-                $("#selectable").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
-                $("#selectable2").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                $("#selectable").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                $("#selectable2").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
             });
 
             $( "#selectable" ).selectable({
