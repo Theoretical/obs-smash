@@ -1,0 +1,33 @@
+#feedback { font-size: 1.4em; }
+#selectable .ui-selecting {  border-style: solid; border-color: green; border-width: medium;}
+#selectable .ui-selected {  border-style: solid; border-color: green; border-width: medium;}
+#selectable { list-style-type: none; margin: 0; padding: 0; width: 450px;}
+#selectable li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
+#selectable2 .ui-selecting {  border-style: solid; border-color: red; border-width: medium;}
+#selectable2 .ui-selected {  border-style: solid; border-color: red; border-width: medium;}
+#selectable2 { list-style-type: none; margin: 0; padding: 0; width: 450px;}
+#selectable2 li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
+
+.character-select {
+    width:950px;
+}
+
+.character-select-score {
+    width:950px;
+}
+
+.player-character {
+    float: left;
+}
+
+.player2-character {
+    float: right;
+}
+
+.player-score {
+    float: right;
+}
+.player2-score {
+    float: left;
+    padding-right: 33px;
+}

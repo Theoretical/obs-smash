@@ -21,10 +21,16 @@
                         $("#matchType").val(data.scene.MatchType);
                         $("#p1name").val(data.scene.Player1Name);
                         $("#p2name").val(data.scene.Player2Name);
+                        $("#p1twitter").val(data.scene.Player1Twitter);
+                        $("#p2twitter").val(data.scene.Player2Twitter);
                         $("#p1score").val(data.scene.Player1Score);
                         $("#p2score").val(data.scene.Player2Score);
                         $("#p1char").val(data.scene.Player1Character);
                         $("#p2char").val(data.scene.Player1Character);
+                        $("#c1name").val(data.scene.Commentator1Name);
+                        $("#c2name").val(data.scene.Commentator1Name);
+                        $("#c1twitter").val(data.scene.Commentator1Twitter);
+                        $("#c2twitter").val(data.scene.Commentator2Twitter);
                     });
                   });
 
@@ -42,10 +48,16 @@
                     scene.MatchType = $("#matchType").val()
                     scene.Player1Name = $("#p1name").val();
                     scene.Player2Name = $("#p2name").val();
+                    scene.Player1Twitter = $("#p1twitter").val();
+                    scene.Player2Twitter = $("#p2twitter").val();
                     scene.Player1Score = $("#p1score").val();
                     scene.Player2Score = $("#p2score").val();
                     scene.Player1Character = $("#p1char").val();
                     scene.Player2Character = $("#p2char").val();
+                    scene.Commentator1Name = $("#c1name").val();
+                    scene.Commentator2Name = $("#c2name").val();
+                    scene.Commentator1Twitter = $("#c1twitter").val();
+                    scene.Commentator2Twitter = $("#c2twitter").val();
 
                     settings.scene = scene;
                     $.post('http://{{ ip }}:5000/settings', {'settings': JSON.stringify(settings)});
@@ -111,6 +123,14 @@
                             <td><input type="text" class="form-control" id="p2name" placeholder="p2name"></td>
                         </tr>
                         <tr>
+                            <td>Player 1 Twitter</td>
+                            <td><input type="text" class="form-control" id="p1twitter" placeholder="EveranceSmash"></td>
+                        </tr>
+                        <tr>
+                            <td>Player 2 Twitter</td>
+                            <td><input type="text" class="form-control" id="p2twitter" placeholder="gsmVoid"></td>
+                        </tr>
+                        <tr>
                             <td>Player 1 Score</td>
                             <td><input type="text" class="form-control" id="p1score" placeholder="p1score"></td>
                         </tr>
@@ -125,6 +145,22 @@
                         <tr>
                             <td>Player 2 Character</td>
                             <td><input type="text" class="form-control" id="p2char" placeholder="p2char"></td>
+                        </tr>
+                        <tr>
+                            <td>Commentator 1 Name</td>
+                            <td><input type="text" class="form-control" id="c1name" placeholder="c1name"></td>
+                        </tr>
+                        <tr>
+                            <td>Commentator 2 Name</td>
+                            <td><input type="text" class="form-control" id="c2name" placeholder="c2name"></td>
+                        </tr>
+                        <tr>
+                            <td>Commentator 1 Twitter</td>
+                            <td><input type="text" class="form-control" id="c1name" placeholder="c1twitter"></td>
+                        </tr>
+                        <tr>
+                            <td>Commentator 2 Twitter</td>
+                            <td><input type="text" class="form-control" id="c2name" placeholder="c2twitter"></td>
                         </tr>
                     </tbody>
                 </table>

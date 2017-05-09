@@ -3,81 +3,71 @@
         <title>Salty Sundays Stream Manager</title>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-        <script src="static/jquery.ddslick.min.js"></script>
-        <script src="static/reconnecting-websocket.min.js"></script>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <script src="static/js/jquery.ddslick.min.js"></script>
+        <script src="static/js/reconnecting-websocket.min.js"></script>
+        <script src="static/js/characters.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-        <style>
-            #feedback { font-size: 1.4em; }
-            #selectable .ui-selecting {  border-style: solid; border-color: green; border-width: medium;}
-            #selectable .ui-selected {  border-style: solid; border-color: green; border-width: medium;}
-            #selectable { list-style-type: none; margin: 0; padding: 0; width: 450px;}
-            #selectable li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
-            #selectable2 .ui-selecting {  border-style: solid; border-color: red; border-width: medium;}
-            #selectable2 .ui-selected {  border-style: solid; border-color: red; border-width: medium;}
-            #selectable2 { list-style-type: none; margin: 0; padding: 0; width: 450px;}
-            #selectable2 li { margin: 3px; padding: 1px; float: left; width: 64px; height: 64px; font-size: 4em; text-align: center; }
-        </style>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous"/>
+        <link rel="stylesheet" href="static/css/main.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
         <script>
+        var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
+        var image_path = '{{ config.SPRITE_PATH }}';
+        var image_path2 = '{{ config.SPRITE_PATH2 }}';
+        var players = {};
+        var players_reverse = {};
+        var matches = {};
+        var player1_score = 0;
+        var player2_score = 0;
+        var is_recording = false;
+        var phases = [];
 
-            // Todo: eventually make this dynamic.
-            var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
-            var players = {};
-            var players_reverse = {};
-            var matches = {};
-            var image_path = '{{ config.SPRITE_PATH }}';
-            var image_path2 = '{{ config.SPRITE_PATH2 }}';
-            var player1_score = 0;
-            var player2_score = 0;
-            var is_recording = false;
-            var phases = [];
-
-            function update_scene_item(name, value, type){
-                cmd = {
-                    'request-type': 'ModifySceneItem',
-                    'scene-name': name,
-                    'scene-value': value,
-                    'scene-type': type
-                }
-                ws.send(JSON.stringify(cmd));
+        function update_scene_item(name, value, type){
+            cmd = {
+                'request-type': 'ModifySceneItem',
+                'scene-name': name,
+                'scene-value': value,
+                'scene-type': type
             }
+            ws.send(JSON.stringify(cmd));
+        }
 
-            function start_stop_recording(){
-                is_recording = !is_recording;
-                console.log('Recording: ' + is_recording);
-                ws.send(JSON.stringify({'request-type': 'StartStopRecording'}));
+        function start_stop_recording(){
+            is_recording = !is_recording;
+            console.log('Recording: ' + is_recording);
+            ws.send(JSON.stringify({'request-type': 'StartStopRecording'}));
 
-                if (!is_recording)
+            if (!is_recording)
+            {
+                if (!$("#manualmatches").prop('checked')) {
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+                    $.post('http://{{ ip }}:5000/match/end', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                } else {
+                    $.post('http://{{ ip }}:5000/match/end', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            $("body").on('click', '.dropdown-menu li a', function(){
+                // hacky
+                var id = $(this).parents(".dropdown-menu").prop("id");
+
+                $(this).parents(".btn-group").find('.btn').html($(this).text() + ' <span class="caret"></span>');
+                $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
+
+                switch(id)
                 {
-                    if (!$("#manualmatches").prop('checked')) {
-                        var match_id = $("#matches").parents(".btn-group").find('.btn').val();
-                        var match = matches[match_id];
-                        $.post('http://{{ ip }}:5000/match/end', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
-                    } else {
-                        $.post('http://{{ ip }}:5000/match/end', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
-                    }
-                }
-            }
-
-            $(document).ready(function() {
-                $("body").on('click', '.dropdown-menu li a', function(){
-                    // hacky
-                    var id = $(this).parents(".dropdown-menu").prop("id");
-
-                    $(this).parents(".btn-group").find('.btn').html($(this).text() + ' <span class="caret"></span>');
-                    $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
-
-                    console.log(id);
-                    if (id == "smashgg_events")
+                    case "smashgg_events":
                         get_phases();
-
-                    if (id == "smashgg_phases")
+                        break;
+                    case "smashgg_phases":
                         on_challonge();
-
-                    if (id == "matches")
-                    {
+                        break;
+                    case "matches":
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
                         var match = matches[match_id];
 
@@ -88,273 +78,285 @@
                         update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
                         update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
                         $("#manualmatches").prop('checked', false);
-                    }
-                });
-
-                $('#challonge').on('input propertychange paste', function() {
-                    if ($("#challonge").val() == '') return;
-                    on_challonge();
-                });
-
-                $("#playerswap").click(function()
-                {
-                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
-                    var match = matches[match_id];
-
-                    var newPlayerOne = match[1];
-                    var newPlayerTwo = match[0];
-
-                    matches[match_id] = [newPlayerOne, newPlayerTwo];
-                    var match = matches[match_id];
-
-                    $("#p1label").text(match[0]);
-                    $("#p2label").text(match[1]);
-                    $("#player1Name").val(match[0]);
-                    $("#player2Name").val(match[1]);
-
-                    if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
-                    {
-                        update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
-                        update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
-                    }
-                    else {
-                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
-                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
-                    }
-                });
-
-                var ddData = [{'text': 'Bayonetta', 'value': 'bayonetta.png', 'imageSrc': 'static/sprites/bayonetta.png'}, {'text': 'Bowser', 'value': 'bowser.png', 'imageSrc': 'static/sprites/bowser.png'}, {'text': 'Bowserjr', 'value': 'bowserjr.png', 'imageSrc': 'static/sprites/bowserjr.png'}, {'text': 'Captainfalcon', 'value': 'captainfalcon.png', 'imageSrc': 'static/sprites/captainfalcon.png'}, {'text': 'Charizard', 'value': 'charizard.png', 'imageSrc': 'static/sprites/charizard.png'}, {'text': 'Cloud', 'value': 'cloud.png', 'imageSrc': 'static/sprites/cloud.png'}, {'text': 'Corrin', 'value': 'corrin.png', 'imageSrc': 'static/sprites/corrin.png'}, {'text': 'Darkpit', 'value': 'darkpit.png', 'imageSrc': 'static/sprites/darkpit.png'}, {'text': 'Dedede', 'value': 'dedede.png', 'imageSrc': 'static/sprites/dedede.png'}, {'text': 'Diddy', 'value': 'diddy.png', 'imageSrc': 'static/sprites/diddy.png'}, {'text': 'Doubles Blue', 'value': 'DoublesBlue.png', 'imageSrc': 'static/sprites/DoublesBlue.png'}, {'text': 'Doubles Green', 'value': 'DoublesGreen.png', 'imageSrc': 'static/sprites/DoublesGreen.png'}, {'text': 'Doubles Red', 'value': 'DoublesRed.png', 'imageSrc': 'static/sprites/DoublesRed.png'},  {'text': 'Donkey', 'value': 'donkey.png', 'imageSrc': 'static/sprites/donkey.png'}, {'text': 'Drmario', 'value': 'drmario.png', 'imageSrc': 'static/sprites/drmario.png'}, {'text': 'Duckhunt', 'value': 'duckhunt.png', 'imageSrc': 'static/sprites/duckhunt.png'}, {'text': 'Falco', 'value': 'falco.png', 'imageSrc': 'static/sprites/falco.png'}, {'text': 'Fox', 'value': 'fox.png', 'imageSrc': 'static/sprites/fox.png'}, {'text': 'Gamewatch', 'value': 'gamewatch.png', 'imageSrc': 'static/sprites/gamewatch.png'}, {'text': 'Ganon', 'value': 'ganon.png', 'imageSrc': 'static/sprites/ganon.png'}, {'text': 'Greninja', 'value': 'greninja.png', 'imageSrc': 'static/sprites/greninja.png'}, {'text': 'Ike', 'value': 'ike.png', 'imageSrc': 'static/sprites/ike.png'}, {'text': 'Jigglypuff', 'value': 'jigglypuff.png', 'imageSrc': 'static/sprites/jigglypuff.png'}, {'text': 'Kirby', 'value': 'kirby.png', 'imageSrc': 'static/sprites/kirby.png'}, {'text': 'Link', 'value': 'link.png', 'imageSrc': 'static/sprites/link.png'}, {'text': 'Littlemac', 'value': 'littlemac.png', 'imageSrc': 'static/sprites/littlemac.png'}, {'text': 'Lucario', 'value': 'lucario.png', 'imageSrc': 'static/sprites/lucario.png'}, {'text': 'Lucas', 'value': 'lucas.png', 'imageSrc': 'static/sprites/lucas.png'}, {'text': 'Lucina', 'value': 'lucina.png', 'imageSrc': 'static/sprites/lucina.png'}, {'text': 'Luigi', 'value': 'luigi.png', 'imageSrc': 'static/sprites/luigi.png'}, {'text': 'Luma', 'value': 'luma.png', 'imageSrc': 'static/sprites/luma.png'}, {'text': 'Malecorrin', 'value': 'malecorrin.png', 'imageSrc': 'static/sprites/malecorrin.png'}, {'text': 'Mario', 'value': 'mario.png', 'imageSrc': 'static/sprites/mario.png'}, {'text': 'Marth', 'value': 'marth.png', 'imageSrc': 'static/sprites/marth.png'}, {'text': 'Megaman', 'value': 'megaman.png', 'imageSrc': 'static/sprites/megaman.png'}, {'text': 'Metaknight', 'value': 'metaknight.png', 'imageSrc': 'static/sprites/metaknight.png'}, {'text': 'Mewtwo', 'value': 'mewtwo.png', 'imageSrc': 'static/sprites/mewtwo.png'}, {'text': 'Miibrawler', 'value': 'miibrawler.png', 'imageSrc': 'static/sprites/miibrawler.png'}, {'text': 'Miigunner', 'value': 'miigunner.png', 'imageSrc': 'static/sprites/miigunner.png'}, {'text': 'Miiswordsman', 'value': 'miiswordsman.png', 'imageSrc': 'static/sprites/miiswordsman.png'}, {'text': 'Ness', 'value': 'ness.png', 'imageSrc': 'static/sprites/ness.png'}, {'text': 'Pacman', 'value': 'pacman.png', 'imageSrc': 'static/sprites/pacman.png'}, {'text': 'Palutena', 'value': 'palutena.png', 'imageSrc': 'static/sprites/palutena.png'}, {'text': 'Peach', 'value': 'peach.png', 'imageSrc': 'static/sprites/peach.png'}, {'text': 'Pikachu', 'value': 'pikachu.png', 'imageSrc': 'static/sprites/pikachu.png'}, {'text': 'Pikmin', 'value': 'pikmin.png', 'imageSrc': 'static/sprites/pikmin.png'}, {'text': 'Pit', 'value': 'pit.png', 'imageSrc': 'static/sprites/pit.png'}, {'text': 'Random', 'value': 'random.png', 'imageSrc': 'static/sprites/random.png'}, {'text': 'Rob', 'value': 'rob.png', 'imageSrc': 'static/sprites/rob.png'}, {'text': 'Roy', 'value': 'roy.png', 'imageSrc': 'static/sprites/roy.png'}, {'text': 'Ryu', 'value': 'ryu.png', 'imageSrc': 'static/sprites/ryu.png'}, {'text': 'Samus', 'value': 'samus.png', 'imageSrc': 'static/sprites/samus.png'}, {'text': 'Sheik', 'value': 'sheik.png', 'imageSrc': 'static/sprites/sheik.png'}, {'text': 'Shulk', 'value': 'shulk.png', 'imageSrc': 'static/sprites/shulk.png'}, {'text': 'Sonic', 'value': 'sonic.png', 'imageSrc': 'static/sprites/sonic.png'}, {'text': 'Toonlink', 'value': 'toonlink.png', 'imageSrc': 'static/sprites/toonlink.png'}, {'text': 'Villager', 'value': 'villager.png', 'imageSrc': 'static/sprites/villager.png'}, {'text': 'Wario', 'value': 'wario.png', 'imageSrc': 'static/sprites/wario.png'}, {'text': 'Wiifit', 'value': 'wiifit.png', 'imageSrc': 'static/sprites/wiifit.png'}, {'text': 'Yoshi', 'value': 'yoshi.png', 'imageSrc': 'static/sprites/yoshi.png'}, {'text': 'Zelda', 'value': 'zelda.png', 'imageSrc': 'static/sprites/zelda.png'}, {'text': 'Zerosuitsamus', 'value': 'zerosuitsamus.png', 'imageSrc': 'static/sprites/zerosuitsamus.png'}];
-
-                $.each(ddData, function(index, value)
-                {
-                    $("#selectable").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
-                    $("#selectable2").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
-                });
-
-                $( "#selectable" ).selectable({
-                    selected:function(event, ui)
-                    {
-                        update_scene_item('{{ config.scene.Player1Character }}', image_path + $(ui.selected).attr('value'), 'file');
-                    }
-                });
-                $( "#selectable2" ).selectable({
-                    selected:function(event, ui)
-                    {
-                        update_scene_item('{{ config.scene.Player2Character }}', image_path2 + $(ui.selected).attr('value'), 'file');
-                    }
-                });
-
-                $("#player1char").ddslick({
-                    data: ddData,
-                    width: 300,
-                    selectText: 'Select Player 1\'s character',
-                    imagePosition:"right",
-                    onSelected: function(selectedData){
-                        data = selectedData.selectedData;
-                        $('#player1val').val(data.value);
-                    }
-                });
-
-                $("#player2char").ddslick({
-                    data: ddData,
-                    width: 300,
-                    selectText: 'Select Player 2\'s character',
-                    imagePosition:"right",
-                    onSelected: function(selectedData){
-                        data = selectedData.selectedData;
-                        $('#player2val').val(data.value);
-                    }
-                });
-
-                $("#matchstatus").click(function(){
-                    var val = $("#matchstatus").val();
-
-                    if (val == 'start'){
-                        $("#matchstatus").text('Stop match!');
-                        $("#matchstatus").val('stop');
-                        player1_score = 0
-                        player2_score = 0;
-                        $("#stream").click();
-                        start_stop_recording();
-                    }
-                    else
-                    {
-                        $("#matchstatus").text('Start match!');
-                        $("#matchstatus").val('start');
-                        if (!$("#manualmatches").prop('checked'))
-                            on_challonge();
-                        $("#stream").click();
-                        start_stop_recording();
-                    }
-                });
-
-                $("#stream").click(function(){
-                    // This is very barebones right now.
-                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
-                    var match = matches[match_id];
-                    var player1_score = Number($("#p1Score").parents(".btn-group").find('.btn').val());
-                    var player2_score = Number($("#p2Score").parents(".btn-group").find('.btn').val());
-
-                    if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
-                    {
-                        update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
-                        update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
-                        $("#p1label").text($("#player1Name").val());
-                        $("#p2label").text($("#player2Name").val());
-                    }
-                    else {
-                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
-                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
-                        $("#p1label").text(match[0]);
-                        $("#p2label").text(match[1]);
-                    }
-
-                    update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
-                    update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
-                    update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
-
-                    player_victory =  $('#victory:checked').val();
-
-                    update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
-                    update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
-                    score = player1_score + '-' + player2_score
-
-                    var winner = ''
-                    var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
-
-                    if (!$("#manualmatches").prop('checked'))
-                    {
-                        if (player1_score == setcount)
-                            winner = players_reverse[match[0]]
-                        else if(player2_score == setcount)
-                            winner = players_reverse[match[1]]
-
-                    if (!$("#manualmatches").prop('checked'))
-                        $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
-                    }
-
-                });
-
-                $("#on_name").click(function(e)
-                {
-                    e.preventDefault();
-                    var name = $("#tournamentname").val();
-                    $.post('http://{{ ip }}:5000/tournament/name', {'name': name}, function(json) {});
-                });
-
-                $("#on_events").click(function(e)
-                {
-                    e.preventDefault();
-                    var url = $("#challonge").val();
-
-                    $.post('http://{{ ip }}:5000/tournament/events', {'url': url}, function(json) {
-                        phases = json['entities']['phase'];
-                        for(i = 0; i < json['entities']['event'].length; i++)
-                        {
-                            var ev = json['entities']['event'][i];
-                            $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
-
-                        }
-                    });
-                    //smashgg_events
-                });
-
-                function get_phases(){
-                    var ev = Number($("#smashgg_events").parents(".btn-group").find('.btn').val());
-                    $('#smashgg_phases')
-                        .find('li')
-                        .remove()
-                        .end()
-                    for (i = 0; i < phases.length; i++)
-                    {
-                        if (phases[i]['eventId'] == ev)
-                        {
-                            $("#smashgg_phases").append('<li><a href="#" data-value="' + phases[i]['id'] + '">' + phases[i]['name'] + '</a></li>');
-                        }
-                    }
-                }
-
-                function on_challonge() {
-                    var challonge_id = $("#challonge").val();
-                    var ev = $("#smashgg_events").parents(".btn-group").find('.btn').val();
-
-                    if (challonge_id.includes('challonge'))
-                    {
-                        $("#smashgg-event-div").hide()
-                        $("#smashgg-phase-div").hide()
-                    }
-                    // Build data set of players.
-                    $.post('http://{{ ip }}:5000/tournament/players', {'url': challonge_id, 'event': ev}, function(json) {
-                        if (challonge_id.includes('challonge'))
-                        {
-                            for (i = 0; i < json.length; i++)
-                            {
-                                var participant = json[i]['participant'];
-                                players[participant['id']] = participant['display_name'];
-                                players_reverse[participant['display_name']] = participant['id'];
-                            }
-                        }
-                        else
-                        {
-                            var player_objs = json['entities']['entrants'];
-                            for (i = 0; i < player_objs.length; i++)
-                            {
-                                var p = player_objs[i];
-                                if (p == undefined) { break; }
-
-                                players[p['id']] = p['name'];
-                                players_reverse[p['name']] = p['id'];
-                            }
-                        }
-                    });
-
-                    // Build data set of matches.
-                    $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
-                        $('#matches')
-                            .find('li')
-                            .remove()
-                            .end()
-
-                        if (challonge_id.includes('challonge'))
-                        {
-                            for (i = 0; i < json.length; i++)
-                            {
-                                var match = json[i]['match'];
-
-                                var player_one = players[match['player1_id']];
-                                var player_two = players[match['player2_id']];
-
-                                var match_str = player_one + ' VS. ' + player_two;
-                                matches[match['id']] = [player_one, player_two];
-
-                                $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
-                            }
-                        }
-                        else {
-                            for (i = 0; i < json.length; i++)
-                            {
-                                var match = json[i];
-
-                                if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
-                                    continue
-
-                                var player_one = players[match['entrant1Id']];
-                                var player_two = players[match['entrant2Id']];
-
-                                if (player_one == undefined || player_two == undefined)
-                                    console.log(i);
-
-                                var match_str = player_one + ' VS. ' + player_two;
-                                matches[match['id']] = [player_one, player_two];
-
-                                $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
-
-                            }
-                        }
-                    });
+                        break;
+                    case "p1Score":
+                        update_scene_item('{{ config.scene.Player1Score }}', $("#p1Score").parents(".btn-group").find('.btn').val(), 'text');
+                        break;
+                    case "p2Score":
+                        update_scene_item('{{ config.scene.Player2Score }}', $("#p2Score").parents(".btn-group").find('.btn').val(), 'text');
+                        break;
                 }
             });
 
+            $('#challonge').on('input propertychange paste', function() {
+                if ($("#challonge").val() == '') return;
+                on_challonge();
+            });
+
+            $("#playerswap").click(function()
+            {
+                var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                var match = matches[match_id];
+
+                var newPlayerOne = match[1];
+                var newPlayerTwo = match[0];
+
+                matches[match_id] = [newPlayerOne, newPlayerTwo];
+                var match = matches[match_id];
+
+                $("#p1label").text(match[0]);
+                $("#p2label").text(match[1]);
+                $("#player1Name").val(match[0]);
+                $("#player2Name").val(match[1]);
+
+                if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                {
+                    update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
+                    update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                }
+                else {
+                    update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
+                    update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                }
+            });
+
+            $.each(ddData, function(index, value)
+            {
+                $("#selectable").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                $("#selectable2").append('<li class="ui-state-default" style="background-image: url('+ value.imageSrc + '); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+            });
+
+            $( "#selectable" ).selectable({
+                selected:function(event, ui)
+                {
+                    update_scene_item('{{ config.scene.Player1Character }}', image_path + $(ui.selected).attr('value'), 'file');
+                }
+            });
+            $( "#selectable2" ).selectable({
+                selected:function(event, ui)
+                {
+                    update_scene_item('{{ config.scene.Player2Character }}', image_path2 + $(ui.selected).attr('value'), 'file');
+                }
+            });
+
+            $("#player1char").ddslick({
+                data: ddData,
+                width: 300,
+                selectText: 'Select Player 1\'s character',
+                imagePosition:"right",
+                onSelected: function(selectedData){
+                    data = selectedData.selectedData;
+                    $('#player1val').val(data.value);
+                }
+            });
+
+            $("#player2char").ddslick({
+                data: ddData,
+                width: 300,
+                selectText: 'Select Player 2\'s character',
+                imagePosition:"right",
+                onSelected: function(selectedData){
+                    data = selectedData.selectedData;
+                    $('#player2val').val(data.value);
+                }
+            });
+
+            $("#matchstatus").click(function(){
+                var val = $("#matchstatus").val();
+
+                if (val == 'start'){
+                    $("#matchstatus").text('Stop match!');
+                    $("#matchstatus").val('stop');
+                    player1_score = 0
+                    player2_score = 0;
+                    $("#stream").click();
+                    start_stop_recording();
+                }
+                else
+                {
+                    $("#matchstatus").text('Start match!');
+                    $("#matchstatus").val('start');
+                    if (!$("#manualmatches").prop('checked'))
+                        on_challonge();
+                    $("#stream").click();
+                    start_stop_recording();
+                }
+            });
+
+            $("#stream").click(function(){
+                // This is very barebones right now.
+                var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                var match = matches[match_id];
+                var player1_score = Number($("#p1Score").parents(".btn-group").find('.btn').val());
+                var player2_score = Number($("#p2Score").parents(".btn-group").find('.btn').val());
+
+                if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                {
+                    update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
+                    update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                    $("#p1label").text($("#player1Name").val());
+                    $("#p2label").text($("#player2Name").val());
+                }
+                else {
+                    update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
+                    update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                    $("#p1label").text(match[0]);
+                    $("#p2label").text(match[1]);
+                }
+
+                update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
+                update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                update_scene_item('{{ config.scene.Player1Twitter }}', $("#player1Twitter").val(), 'text');
+                update_scene_item('{{ config.scene.Player2Twitter }}', $("#player2Twitter").val(), 'text');
+                update_scene_item('{{ config.scene.Commentator1Name }}', $("#c1name").val(), 'text');
+                update_scene_item('{{ config.scene.Commentator2Name }}', $("#c2name").val(), 'text');
+                update_scene_item('{{ config.scene.Commentator1Twitter }}', $("#c1twitter").val(), 'text');
+                update_scene_item('{{ config.scene.Commentator2Twitter }}', $("#c2twitter").val(), 'text');
+
+                update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+
+                player_victory =  $('#victory:checked').val();
+
+                update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
+                update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                score = player1_score + '-' + player2_score
+
+                var winner = ''
+                var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
+
+                if (!$("#manualmatches").prop('checked'))
+                {
+                    if (player1_score == setcount)
+                        winner = players_reverse[match[0]]
+                    else if(player2_score == setcount)
+                        winner = players_reverse[match[1]]
+
+                if (!$("#manualmatches").prop('checked'))
+                    $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
+                }
+
+            });
+
+            $("#on_name").click(function(e)
+            {
+                e.preventDefault();
+                var name = $("#tournamentname").val();
+                $.post('http://{{ ip }}:5000/tournament/name', {'name': name}, function(json) {});
+            });
+
+            $("#on_events").click(function(e)
+            {
+                e.preventDefault();
+                var url = $("#challonge").val();
+
+                $.post('http://{{ ip }}:5000/tournament/events', {'url': url}, function(json) {
+                    phases = json['entities']['phase'];
+                    for(i = 0; i < json['entities']['event'].length; i++)
+                    {
+                        var ev = json['entities']['event'][i];
+                        $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
+
+                    }
+                });
+                //smashgg_events
+            });
+
+            function get_phases(){
+                var ev = Number($("#smashgg_events").parents(".btn-group").find('.btn').val());
+                $('#smashgg_phases')
+                    .find('li')
+                    .remove()
+                    .end()
+                for (i = 0; i < phases.length; i++)
+                {
+                    if (phases[i]['eventId'] == ev)
+                    {
+                        $("#smashgg_phases").append('<li><a href="#" data-value="' + phases[i]['id'] + '">' + phases[i]['name'] + '</a></li>');
+                    }
+                }
+            }
+
+            function on_challonge() {
+                var challonge_id = $("#challonge").val();
+                var ev = $("#smashgg_events").parents(".btn-group").find('.btn').val();
+
+                if (challonge_id.includes('challonge'))
+                {
+                    $("#smashgg-event-div").hide()
+                    $("#smashgg-phase-div").hide()
+                }
+                // Build data set of players.
+                $.post('http://{{ ip }}:5000/tournament/players', {'url': challonge_id, 'event': ev}, function(json) {
+                    if (challonge_id.includes('challonge'))
+                    {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var participant = json[i]['participant'];
+                            players[participant['id']] = participant['display_name'];
+                            players_reverse[participant['display_name']] = participant['id'];
+                        }
+                    }
+                    else
+                    {
+                        var player_objs = json['entities']['entrants'];
+                        for (i = 0; i < player_objs.length; i++)
+                        {
+                            var p = player_objs[i];
+                            if (p == undefined) { break; }
+
+                            players[p['id']] = p['name'];
+                            players_reverse[p['name']] = p['id'];
+                        }
+                    }
+                });
+
+                // Build data set of matches.
+                $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
+                    $('#matches')
+                        .find('li')
+                        .remove()
+                        .end()
+
+                    if (challonge_id.includes('challonge'))
+                    {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var match = json[i]['match'];
+                            console.log(match['round']);
+                            var player_one = players[match['player1_id']];
+                            var player_two = players[match['player2_id']];
+
+                            var round = match['round'] > 0 ? "Winners" : "Losers"
+                            var match_str = '[' + round + ']' + player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+
+                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                        }
+                    }
+                    else {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var match = json[i];
+
+                            if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                continue
+
+                            var player_one = players[match['entrant1Id']];
+                            var player_two = players[match['entrant2Id']];
+
+                            if (player_one == undefined || player_two == undefined)
+                                console.log(i);
+
+                            var match_str = player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+
+                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+
+                        }
+                    }
+                });
+            }
+        });
         </script>
     </head>
     <body>
@@ -446,14 +448,15 @@
             <table class="table table-striped">
                 <thead>
                 <tr>
-                    <th>Friendlies </th>
-                    <th>Use table instead.</th>
-                    <th><input type="checkbox" id="manualmatches" checked/></th>
+                    <th>Player Tags: <input type="checkbox" id="manualmatches" checked/></th>
                 </tr>
                 </thead>
                 <tbody>
-                <tr><td>Player 1: </td><td><input type="text" class="form-control" placeholder="Everance" aria-describedby="basic-addon1" id="player1Name"/></td>
-                <tr><td>Player 2: </td><td><input type="text" class="form-control" placeholder="Mr. Postman" aria-describedby="basic-addon1" id="player2Name"/></td></tr>
+                <tr><td>Player 1: </td><td><input type="text" class="form-control" placeholder="Everance" aria-describedby="basic-addon1" id="player1Name"/></td><td><i class="fa fa-gamepad" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="EveranceSmash" aria-describedby="basic-addon1" id="player1Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td>
+                <tr><td>Player 2: </i></td><td><input type="text" class="form-control" placeholder="Mr. Postman" aria-describedby="basic-addon1" id="player2Name"/></td><td><i class="fa fa-gamepad" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="gsmVoid" aria-describedby="basic-addon1" id="player2Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td></tr>
+                <tr><td>Commentator 2: </td><td><input type="text" class="form-control" placeholder="D1" aria-describedby="basic-addon1" id="c2Name"/></td><td><i class="fa fa-headphones" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="xD1x" aria-describedby="basic-addon1" id="c2Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td></tr>
+                <tr><td>Commentator 1: </i></td><td><input type="text" class="form-control" placeholder="Keitaro" aria-describedby="basic-addon1" id="c1Name"/></td><td><i class="fa fa-headphones" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="KeitaroTime" aria-describedby="basic-addon1" id="c1Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td>
+
             </tbody>
             </tr>
         </table>
@@ -468,8 +471,8 @@
         <input type="hidden" id="player1val" />
         <input type="hidden" id="player2val" />
 
-        <div style="width:950px">
-            <div style="float: left">
+        <div class="character-select-score">
+            <div class="player-character">
                 <div class="btn-group">
                     <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu6" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                         P1 Score
@@ -484,8 +487,8 @@
                 </div>
                 <span class="label label-success" id="p1label"></span>
             </div>
-            <div style="float: right">
-                <div style="float: left; padding-right: 33px;">
+            <div class="player-score">
+                <div class="player2-score">
                     <span class="label label-danger" id="p2label"></span>
                     <div class="btn-group">
                         <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu7" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -504,17 +507,17 @@
         </div>
         <br/><br/><br/>
 
-        <div style="width:950px" id="characterSelect">
-            <div id="player1" style="float: left">
-                <div id="wrapper1" style="float: left">
+        <div class="character-select" id="characterSelect">
+            <div id="player1" class="player-character">
+                <div id="wrapper1" class="player-character">
                     <ol id="selectable">
                     </o>
                 </div>
 
             </div>
 
-            <div id="player2" style="float: right">
-                <div style="float: left">
+            <div id="player2" class="player2-character">
+                <div class="player-character">
                     <ol id="selectable2">
                     </o>
                 </div>
