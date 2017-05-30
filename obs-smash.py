@@ -63,7 +63,7 @@ class Tournament(object):
     def on_settings(self):
         if request.method == 'POST':
             self.config = loads(request.form['settings'])
-            open('config.json', 'w').write(dumps(config, indent=4))
+            open('config.json', 'w').write(dumps(self.config, indent=4))
 
             print('Reloaded settings file!')
             return jsonify({})

@@ -23,6 +23,7 @@
         var player2_score = 0;
         var is_recording = false;
         var phases = [];
+        var CURRENT_GAME = 'smash4';
 
         function update_scene_item(name, value, type){
             cmd = {
@@ -61,6 +62,45 @@
 
                 switch(id)
                 {
+                    case "currentgame":
+                        CURRENT_GAME =$("#currentgame").parents(".btn-group").find('.btn').val();
+                        $('#selectable')
+                            .find('li')
+                            .remove()
+                            .end();
+                        $('#selectable2')
+                            .find('li')
+                            .remove()
+                            .end()
+
+                        $.each(CHARACTER_SPRITES[CURRENT_GAME], function(index, value)
+                        {
+                            $("#selectable").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                            $("#selectable2").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                        });
+
+                        $("#player1char").ddslick({
+                            data: CHARACTER_SPRITES[CURRENT_GAME],
+                            width: 300,
+                            selectText: 'Select Player 1\'s character',
+                            imagePosition:"right",
+                            onSelected: function(selectedData){
+                                data = selectedData.selectedData;
+                                $('#player1val').val(data.value);
+                            }
+                        });
+
+                        $("#player2char").ddslick({
+                            data: CHARACTER_SPRITES[CURRENT_GAME],
+                            width: 300,
+                            selectText: 'Select Player 2\'s character',
+                            imagePosition:"right",
+                            onSelected: function(selectedData){
+                                data = selectedData.selectedData;
+                                $('#player2val').val(data.value);
+                            }
+                        });
+                        break;
                     case "smashgg_events":
                         get_phases();
                         break;
@@ -120,11 +160,13 @@
                 }
             });
 
-            $.each(ddData, function(index, value)
+            $.each(CHARACTER_SPRITES[CURRENT_GAME], function(index, value)
             {
                 $("#selectable").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
                 $("#selectable2").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
             });
+
+
 
             $( "#selectable" ).selectable({
                 selected:function(event, ui)
@@ -140,7 +182,7 @@
             });
 
             $("#player1char").ddslick({
-                data: ddData,
+                data: CHARACTER_SPRITES[CURRENT_GAME],
                 width: 300,
                 selectText: 'Select Player 1\'s character',
                 imagePosition:"right",
@@ -151,7 +193,7 @@
             });
 
             $("#player2char").ddslick({
-                data: ddData,
+                data: CHARACTER_SPRITES[CURRENT_GAME],
                 width: 300,
                 selectText: 'Select Player 2\'s character',
                 imagePosition:"right",
@@ -214,9 +256,6 @@
                 update_scene_item('{{ config.scene.Commentator2Twitter }}', $("#c2twitter").val(), 'text');
 
                 update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
-
-                player_victory =  $('#victory:checked').val();
-
                 update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
                 update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
                 score = player1_score + '-' + player2_score
@@ -375,6 +414,18 @@
                 </span>
             </div>
             <br/>
+            <div class="btn-group">
+                <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Current Game
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2" id="currentgame">
+                    <li value="2"><a href="#" data-value="smash4">Smash 4</a></li>
+                    <li value="3"><a href="#" data-value="injustice2">Injustice 2</a></li>
+                    <li value="3"><a href="#" data-value="melee">Melee</a></li>
+                    <li value="3"><a href="#" data-value="ggxrdrev2">Guilty Gear XRD: Rev2</a></li>
+                </ul>
+          </div>
             <div class="btn-group" id="smashgg-event-div">
                 <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                     SmashGG Events
