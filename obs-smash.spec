@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['obs-smash.py'],
+a = Analysis(['obs-smash.py', 'youtube.py'],
              pathex=['C:\\Users\\Everance\\Documents\\GitHub\\obs-smash'],
              binaries=[],
              datas=[
@@ -12,6 +12,8 @@ a = Analysis(['obs-smash.py'],
                 ('static/js/*', './static/js'),
                 ('static/sprites/injustice2/*', './static/sprites/injustice2'),
                 ('static/sprites/smash4/*', './static/sprites/smash4'),
+                ('static/sprites/melee/*', './static/sprites/melee'),
+                ('static/sprites/ggxrdrev2/*', './static/sprites/ggxrdrev2'),
              ],
              hiddenimports=['googleapiclient', 'apiclient', 'oauth2client'],
              hookspath=[],

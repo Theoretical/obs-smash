@@ -1,14 +1,15 @@
 from flask import Flask, jsonify, render_template, request, Response
 from flask_cors import CORS, cross_origin
 from json import dumps, loads
-from multiprocessing import Process, Queue
 from oauth2client.tools import argparser
 from os import listdir, rename
 from os.path import getmtime, isfile, join
+from queue import Queue
 from re import sub
 from requests import get, put
 from socket import gethostname, gethostbyname
 from time import sleep
+from threading import Thread
 from urllib.parse import urlparse
 from youtube import get_authenticated_service, initialize_upload
 
@@ -22,10 +23,11 @@ argparser.add_argument("--keywords")
 argparser.add_argument("--privacyStatus", default="PUBLIC")
 YOUTUBE_QUEUE = Queue()
 
-
 def youtube_process(queue):
+    print('Youtube Queue ready to process!')
     while True:
         args = queue.get(block=True)
+        print ('Now uploading: %s' % args)
         youtube = get_authenticated_service(args)
         initialize_upload(youtube, args)
 
@@ -178,10 +180,11 @@ class Tournament(object):
         return jsonify({})
 
 if __name__ == '__main__':
+    YOUTUBE_THREAD = Thread(target=youtube_process, args=([YOUTUBE_QUEUE])).start()
+
     hostname = gethostname()
     lan_ip = gethostbyname(hostname)
     print ('Smash4 Stream Manager: http://{ip}:5000'.format(ip=lan_ip))
 
     tournament = Tournament()
     tournament.app.run('0.0.0.0')
-    YOUTUBE_PROCESS = Process(target=youtube_process, args=([YOUTUBE_QUEUE])).start()
