@@ -7,7 +7,8 @@ OBS manager for Smash4 (or any other smash game) using Python 3.
 * Easily manageable via tablet or phone.
 
 
-![Preview](http://i.imgur.com/4uqDN98.png)
+![Preview](http://i.imgur.com/MnJleyk.png)
+![Preview2](http://i.imgur.com/MPBfFfE.jpg)
 
 # OBS
 The OBS included is a manually compiled OBS with a custom obs-websocket.dll to add scene item management.
