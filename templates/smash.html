@@ -13,7 +13,7 @@
         <link rel="stylesheet" href="static/css/main.css"/>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
         <script>
-        var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
+        //#var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
         var CURRENT_GAME = 'smash4';
         var image_path = '{{ config.SPRITE_PATH }}' + '/' + CURRENT_GAME + '/';
         var image_path2 = '{{ config.SPRITE_PATH2 }}' + '/' + CURRENT_GAME + '/';
@@ -223,6 +223,7 @@
                     $("#matchstatus").val('stop');
                     player1_score = 0
                     player2_score = 0;
+					$.post('http://{{ ip }}:5000/match/start', {'player1': $("#player1Twitter").val(), 'player2': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
                     $("#stream").click();
                     start_stop_recording();
                 }

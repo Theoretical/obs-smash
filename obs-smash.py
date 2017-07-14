@@ -10,6 +10,7 @@ from requests import get, put
 from socket import gethostname, gethostbyname
 from time import sleep
 from threading import Thread
+from twitter import Api
 from urllib.parse import urlparse
 from youtube import get_authenticated_service, initialize_upload
 
@@ -43,6 +44,13 @@ class Tournament(object):
         self.is_smash_gg = False
         self.app = Flask(__name__)
 
+        try:
+            self.twitter = Api(self.config['twitter']['ConsumerKey'], self.config['twitter']['ConsumerSecret'], self.config['twitter']['Token'], self.config['twitter']['TokenSecret'])
+            self.twitter.VerifyCredentials()
+        except Exception as e:
+            print('Failed to auth to twitter: %s' % e)
+            self.twitter = None
+
         self.build_routes()
         CORS(self.app)
 
@@ -55,6 +63,7 @@ class Tournament(object):
         self.app.add_url_rule('/tournament/brackets', 'brackets', self.on_brackets, methods=['POST'])
         self.app.add_url_rule('/tournament/name', 'name', self.on_name, methods=['POST'])
         self.app.add_url_rule('/challonge/update', 'challonge_update', self.on_challonge_update, methods=['POST'])
+        self.app.add_url_rule('/match/start', 'match_start', self.on_match_start, methods=['POST'])
         self.app.add_url_rule('/match/end', 'match_end', self.on_match_end, methods=['POST'])
         self.app.add_url_rule('/match/clip', 'match_clip', self.on_match_clip, methods=['POST'])
 
@@ -146,6 +155,19 @@ class Tournament(object):
 
     def on_name(self):
         self.name = request.form['name']
+        return jsonify({})
+
+    def on_match_start(self):
+        player1 = request.form['player1']
+        player2 = request.form['player2']
+        matchType = request.form['matchType']
+        stream = self.config['TWITCH_CHAT']
+        if stream:
+            stream = stream.split('/chat')[0]
+
+        if self.twitter:
+            self.twitter.PostUpdate("We're going live at {event}! @{player1} vs. @{player2} starting now in {round} at {stream}!".format(event=self.name, player1=player1, player2=player2, round=matchType, stream=stream))
+
         return jsonify({})
 
     def on_match_clip(self):

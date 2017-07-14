@@ -31,6 +31,10 @@
                         $("#c2name").val(data.scene.Commentator1Name);
                         $("#c1twitter").val(data.scene.Commentator1Twitter);
                         $("#c2twitter").val(data.scene.Commentator2Twitter);
+						$("twConsumerKey").val(data.twitter.ConsumerKey);
+						$("twConsumerSecret").val(data.twitter.ConsumerSecret);
+						$("twToken").val(data.twitter.Token);
+						$("twTokenSecret").val(data.twitter.TokenSecret);
                     });
                   });
 
@@ -60,6 +64,13 @@
                     scene.Commentator2Twitter = $("#c2twitter").val();
 
                     settings.scene = scene;
+
+					var twitter = Object();
+					twitter.ConsumerKey = $("#twConsumerKey").val();
+					twitter.ConsumerSecret = $("#twConsumerSecret").val();
+					twitter.Token = $("#twToken").val();
+					twitter.TokenSecret = $("#twTokenSecret").val();
+					settings.twitter = twitter;
                     $.post('http://{{ ip }}:5000/settings', {'settings': JSON.stringify(settings)});
                 });
             });
@@ -162,6 +173,29 @@
                             <td>Commentator 2 Twitter</td>
                             <td><input type="text" class="form-control" id="c2name" placeholder="c2twitter"></td>
                         </tr>
+                    <thead>
+                        <tr>
+                            <th>Twitter OAuth</th>
+                            <th>Input</th>
+                        </tr>
+                        <tr>
+                            <td>Consumer Key</td>
+                            <td><input type="password" class="form-control" id="twConsumerKey" placeholder="****"></td>
+                        </tr>
+                        <tr>
+                            <td>Consumer Secret</td>
+                            <td><input type="password" class="form-control" id="twConsumerSecret" placeholder="****"></td>
+                        </tr>
+                        <tr>
+                            <td>Token</td>
+                            <td><input type="password" class="form-control" id="twToken" placeholder="****"></td>
+                        </tr>
+                        <tr>
+                            <td>Token Secret</td>
+                            <td><input type="password" class="form-control" id="twTokenSecret" placeholder="****"></td>
+                        </tr>
+                    </thead>
+                    <tbody>
                     </tbody>
                 </table>
                 <button id="settings" class="btn btn-default">Save</button>
