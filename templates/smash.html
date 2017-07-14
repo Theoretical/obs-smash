@@ -205,6 +205,16 @@
                 }
             });
 
+            $("#replaystatus").click(function() {
+                ws.send(JSON.stringify({'request-type': 'SaveReplay'}));
+                if (!$("#manualmatches").prop('checked')) {
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+                    $.post('http://{{ ip }}:5000/match/clip', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                } else {
+                    $.post('http://{{ ip }}:5000/match/clip', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                }
+            });
             $("#matchstatus").click(function(){
                 var val = $("#matchstatus").val();
 
@@ -516,6 +526,7 @@
 
         <div class="btn-group" role="group" aria-label="...">
             <button type="button" class="btn btn-success" id="matchstatus" value="start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start match</button>
+            <button type="button" class="btn btn-primary" id="replaystatus" value="start"><span class="fa fa-youtube-play" aria-hidden="true"></span> Clip that shit</button>
             <button type="button" class="btn btn-info" id="stream"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Update Stream</button>
             <button type="button" class="btn btn-danger" id="playerswap"><span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span> Swap players</button>
         </div>

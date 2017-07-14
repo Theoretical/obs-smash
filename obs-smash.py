@@ -56,6 +56,7 @@ class Tournament(object):
         self.app.add_url_rule('/tournament/name', 'name', self.on_name, methods=['POST'])
         self.app.add_url_rule('/challonge/update', 'challonge_update', self.on_challonge_update, methods=['POST'])
         self.app.add_url_rule('/match/end', 'match_end', self.on_match_end, methods=['POST'])
+        self.app.add_url_rule('/match/clip', 'match_clip', self.on_match_clip, methods=['POST'])
 
     def on_index(self):
         hostname = gethostname()
@@ -99,8 +100,11 @@ class Tournament(object):
 
             challonge_id = team + parsed.path[1:]
             self.slug = challonge_id
+            print(self.slug)
 
             res = get('https://api.challonge.com/v1/tournaments/{id}.json?api_key={key}'.format(id=challonge_id, key=self.key))
+            print (res)
+            print(res.content)
 
             self.name = res.json()['tournament']['name']
             print ('%s | %s' % (challonge_id, team))
@@ -144,6 +148,33 @@ class Tournament(object):
         self.name = request.form['name']
         return jsonify({})
 
+    def on_match_clip(self):
+        global YOUTUBE_QUEUE # global upload process.
+        sleep(4) # Sleep for 4s to make sure our clip is saved.
+
+        RECORDING_DIRECTORY = self.config['RECORDING_DIRECTORY']
+        file_list = [join(RECORDING_DIRECTORY, f) for f in listdir(RECORDING_DIRECTORY) if isfile(join(RECORDING_DIRECTORY, f)) and 'Replay' in f]
+        clip_list = [join(RECORDING_DIRECTORY, 'clips/', f) for f in listdir(RECORDING_DIRECTORY + '/clips/') if isfile(join(RECORDING_DIRECTORY, 'clips/', f))]
+        latest_recording = max(file_list, key=getmtime)
+
+        # rename clip.
+        player1 = request.form['player1']
+        player2 = request.form['player2']
+        matchType = request.form['matchType']
+
+        # clip name. (max 100 char.) due to youtube.
+        clip = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament}'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name))[:100]
+
+        n = 1
+        while join(RECORDING_DIRECTORY, 'clips/', clip + '.flv') in clip_list:
+            clip = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament} ({n})'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name, n=n))[:100]
+            n += 1
+
+        file_name = join(RECORDING_DIRECTORY, 'clips/', clip + '.flv')
+        rename(latest_recording, file_name)
+        return jsonify({})
+
+
     def on_match_end(self):
         global YOUTUBE_QUEUE # global upload process.
         sleep(4) # Sleep for 4s to make sure our recording is saved.
@@ -161,11 +192,11 @@ class Tournament(object):
         recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament}'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name))[:100]
 
         n = 1
-        while join(RECORDING_DIRECTORY, recording_name + '.mp4') in file_list:
+        while join(RECORDING_DIRECTORY, recording_name + '.flv') in file_list:
             recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament} ({n})'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name, n=n))[:100]
             n += 1
 
-        file_name = join(RECORDING_DIRECTORY, recording_name + '.mp4')
+        file_name = join(RECORDING_DIRECTORY, recording_name + '.flv')
         rename(latest_recording, file_name)
 
         # upload the video.
@@ -173,7 +204,7 @@ class Tournament(object):
             '--file', file_name,
             '--title', recording_name,
             '--description', self.config['YOUTUBE_DESCRIPTION'],
-            '--keywords', self.config['YOUTUBE_KEYWORDS']
+            '--keywords', self.config['YOUTUBE_KEYWORDS'] + ',%s,%s' % (player1, player2)
         ])
 
         YOUTUBE_QUEUE.put(youtube_args)
