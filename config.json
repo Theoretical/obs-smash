@@ -5,7 +5,7 @@
         "ConsumerSecret": "",
         "Token": "",
         "TokenSecret": ""
-    }
+    },
     "scene": {
         "Player1Score": "p1score",
         "Player1Character": "p1char",
