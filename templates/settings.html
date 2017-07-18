@@ -26,15 +26,15 @@
                         $("#p1score").val(data.scene.Player1Score);
                         $("#p2score").val(data.scene.Player2Score);
                         $("#p1char").val(data.scene.Player1Character);
-                        $("#p2char").val(data.scene.Player1Character);
+                        $("#p2char").val(data.scene.Player2Character);
                         $("#c1name").val(data.scene.Commentator1Name);
-                        $("#c2name").val(data.scene.Commentator1Name);
+                        $("#c2name").val(data.scene.Commentator2Name);
                         $("#c1twitter").val(data.scene.Commentator1Twitter);
                         $("#c2twitter").val(data.scene.Commentator2Twitter);
-						$("twConsumerKey").val(data.twitter.ConsumerKey);
-						$("twConsumerSecret").val(data.twitter.ConsumerSecret);
-						$("twToken").val(data.twitter.Token);
-						$("twTokenSecret").val(data.twitter.TokenSecret);
+						$("#twConsumerKey").val(data.twitter.ConsumerKey);
+						$("#twConsumerSecret").val(data.twitter.ConsumerSecret);
+						$("#twToken").val(data.twitter.Token);
+						$("#twTokenSecret").val(data.twitter.TokenSecret);
                     });
                   });
 
@@ -49,19 +49,19 @@
                     settings.YOUTUBE_KEYWORDS = $("#youtubeKeywords").val();
                     settings.TWITCH_CHAT = $("#twitchChat").val();
                     var scene = Object();
-                    scene.MatchType = $("#matchType").val()
-                    scene.Player1Name = $("#p1name").val();
-                    scene.Player2Name = $("#p2name").val();
-                    scene.Player1Twitter = $("#p1twitter").val();
-                    scene.Player2Twitter = $("#p2twitter").val();
-                    scene.Player1Score = $("#p1score").val();
-                    scene.Player2Score = $("#p2score").val();
+                    scene.MatchType = $("#matchType").val().split("|")
+                    scene.Player1Name = $("#p1name").val().split("|");
+                    scene.Player2Name = $("#p2name").val().split("|");
+                    scene.Player1Twitter = $("#p1twitter").val().split("|");
+                    scene.Player2Twitter = $("#p2twitter").val().split("|");
+                    scene.Player1Score = $("#p1score").val().split("|");
+                    scene.Player2Score = $("#p2score").val().split("|");
                     scene.Player1Character = $("#p1char").val();
                     scene.Player2Character = $("#p2char").val();
-                    scene.Commentator1Name = $("#c1name").val();
-                    scene.Commentator2Name = $("#c2name").val();
-                    scene.Commentator1Twitter = $("#c1twitter").val();
-                    scene.Commentator2Twitter = $("#c2twitter").val();
+                    scene.Commentator1Name = $("#c1name").val().split("|");
+                    scene.Commentator2Name = $("#c2name").val().split("|");
+                    scene.Commentator1Twitter = $("#c1twitter").val().split("|");
+                    scene.Commentator2Twitter = $("#c2twitter").val().split("|");
 
                     settings.scene = scene;
 
@@ -135,11 +135,11 @@
                         </tr>
                         <tr>
                             <td>Player 1 Twitter</td>
-                            <td><input type="text" class="form-control" id="p1twitter" placeholder="EveranceSmash"></td>
+                            <td><input type="text" class="form-control" id="p1twitter" placeholder="p1twitter"></td>
                         </tr>
                         <tr>
                             <td>Player 2 Twitter</td>
-                            <td><input type="text" class="form-control" id="p2twitter" placeholder="gsmVoid"></td>
+                            <td><input type="text" class="form-control" id="p2twitter" placeholder="p2twitter"></td>
                         </tr>
                         <tr>
                             <td>Player 1 Score</td>

@@ -13,6 +13,7 @@
         <link rel="stylesheet" href="static/css/main.css"/>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
         <script>
+
         var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
         var CURRENT_GAME = 'smash4';
         var image_path = '{{ config.SPRITE_PATH }}' + '/' + CURRENT_GAME + '/';
@@ -117,15 +118,23 @@
                         $("#p2label").text(match[1]);
                         $("#player1Name").val(match[0]);
                         $("#player2Name").val(match[1]);
-                        update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
-                        update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                        {% for scene in config.scene.Player1Name %}
+                            update_scene_item('{{ scene }}', match[0], 'text');
+                        {% endfor %}
+                        {% for scene in config.scene.Player2Name %}
+                            update_scene_item('{{ scene }}', match[0], 'text');
+                        {% endfor %}
                         $("#manualmatches").prop('checked', false);
                         break;
                     case "p1Score":
-                        update_scene_item('{{ config.scene.Player1Score }}', $("#p1Score").parents(".btn-group").find('.btn').val(), 'text');
+                        {% for scene in config.scene.Player1Score %}
+                            update_scene_item('{{ scene }}', $("#p1Score").parents(".btn-group").find('.btn').val(), 'text');
+                        {% endfor %}
                         break;
                     case "p2Score":
-                        update_scene_item('{{ config.scene.Player2Score }}', $("#p2Score").parents(".btn-group").find('.btn').val(), 'text');
+                        {% for scene in config.scene.Player1Score %}
+                            update_scene_item('{{ scene }}', $("#p2Score").parents(".btn-group").find('.btn').val(), 'text');
+                        {% endfor %}
                         break;
                 }
             });
@@ -153,12 +162,22 @@
 
                 if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
                 {
-                    update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
-                    update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                    {% for scene in config.scene.Player1Name %}
+                        update_scene_item('{{ scene }}', $("#player1Name").val(), 'text');
+                    {% endfor %}
+
+                    {% for scene in config.scene.Player2Name %}
+                        update_scene_item('{{ scene }}', $("#player2Name").val(), 'text');
+                    {% endfor %}
                 }
                 else {
-                    update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
-                    update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                    {% for scene in config.scene.Player1Name %}
+                        update_scene_item('{{ scene }}', match[0], 'text');
+                    {% endfor %}
+
+                    {% for scene in config.scene.Player2Name %}
+                        update_scene_item('{{ scene }}', match[1], 'text');
+                    {% endfor %}
                 }
             });
 
@@ -247,30 +266,64 @@
 
                 if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
                 {
-                    update_scene_item('{{ config.scene.Player1Name }}', $("#player1Name").val(), 'text');
-                    update_scene_item('{{ config.scene.Player2Name }}', $("#player2Name").val(), 'text');
+                    {% for scene in config.scene.Player1Name %}
+                        update_scene_item('{{ scene }}', $("#player1Name").val(), 'text');
+                    {% endfor %}
+
+                    {% for scene in config.scene.Player2Name %}
+                        update_scene_item('{{ scene }}', $("#player2Name").val(), 'text');
+                    {% endfor %}
                     $("#p1label").text($("#player1Name").val());
                     $("#p2label").text($("#player2Name").val());
                 }
                 else {
-                    update_scene_item('{{ config.scene.Player1Name }}', match[0], 'text');
-                    update_scene_item('{{ config.scene.Player2Name }}', match[1], 'text');
+                    {% for scene in config.scene.Player1Name %}
+                        update_scene_item('{{ scene }}', match[0], 'text');
+                    {% endfor %}
+
+                    {% for scene in config.scene.Player2Name %}
+                        update_scene_item('{{ scene }}', match[1], 'text');
+                    {% endfor %}
                     $("#p1label").text(match[0]);
                     $("#p2label").text(match[1]);
                 }
 
-                update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
-                update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
-                update_scene_item('{{ config.scene.Player1Twitter }}', $("#player1Twitter").val(), 'text');
-                update_scene_item('{{ config.scene.Player2Twitter }}', $("#player2Twitter").val(), 'text');
-                update_scene_item('{{ config.scene.Commentator1Name }}', $("#c1name").val(), 'text');
-                update_scene_item('{{ config.scene.Commentator2Name }}', $("#c2name").val(), 'text');
-                update_scene_item('{{ config.scene.Commentator1Twitter }}', $("#c1twitter").val(), 'text');
-                update_scene_item('{{ config.scene.Commentator2Twitter }}', $("#c2twitter").val(), 'text');
+                {% for scene in config.scene.Player1Score %}
+                    update_scene_item('{{ scene }}', player1_score.toString(), 'text');
+                {% endfor %}
 
-                update_scene_item('{{ config.scene.MatchType }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
-                update_scene_item('{{ config.scene.Player1Score }}', player1_score.toString(), 'text');
-                update_scene_item('{{ config.scene.Player2Score }}', player2_score.toString(), 'text');
+                {% for scene in config.scene.Player2Score %}
+                    update_scene_item('{{ scene }}', player2_score.toString(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Player1Twitter %}
+                    update_scene_item('{{ scene }}', $("#player1Twitter").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Player2Twitter %}
+                    update_scene_item('{{ scene }}', $("#player2Twitter").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Commentator1Name %}
+                    update_scene_item('{{ scene }}', $("#c1name").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Commentator2Name %}
+                    update_scene_item('{{ scene }}', $("#c2name").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Commentator1Twitter %}
+                    update_scene_item('{{ scene }}', $("#c1twitter").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.Commentator2Twitter %}
+                    update_scene_item('{{ scene }}', $("#c2twitter").val(), 'text');
+                {% endfor %}
+
+                {% for scene in config.scene.MatchType %}
+                    update_scene_item('{{ scene }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+                {% endfor %}
+
                 score = player1_score + '-' + player2_score
 
                 var winner = ''

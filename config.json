@@ -1,28 +1,43 @@
 {
+    "SPRITE_PATH2": "C:/Users/Everance/Documents/GitHub/obs-smash/static/sprites",
+    "SPRITE_PATH": "C:/Users/Everance/Documents/GitHub/obs-smash/static/sprites",
     "CHALLONGE_API_KEY": "",
-    "twitter": {
-        "ConsumerKey": "",
-        "ConsumerSecret": "",
-        "Token": "",
-        "TokenSecret": ""
-    },
-    "scene": {
-        "Player1Score": "p1score",
-        "Player1Character": "p1char",
-        "Commentator2Name": "",
-        "Player2Twitter": "",
-        "MatchType": "matchType",
-        "Player1Twitter": "",
-        "Player1Name": "p1name",
-        "Commentator1Name": "",
-        "Player2Character": "p1char",
-        "Player2Score": "p2score",
-        "Player2Name": "p2name"
-    },
-    "SPRITE_PATH2": "",
-    "YOUTUBE_DESCRIPTION": "",
     "YOUTUBE_KEYWORDS": "",
-    "SPRITE_PATH": "",
     "RECORDING_DIRECTORY": "",
-    "TWITCH_CHAT": "https://twitch.tv/pushblockgaming/chat"
+    "scene": {
+        "Commentator2Name": "",
+        "MatchType": [
+            "matchType"
+        ],
+        "Player2Twitter": [
+            ""
+        ],
+        "Player1Twitter": [
+            ""
+        ],
+        "Player2Score": [
+            "p2score"
+        ],
+        "Player2Name": [
+            "p2name",
+            "Player2Test"
+        ],
+        "Player2Character": "p1char",
+        "Commentator1Name": "",
+        "Player1Score": [
+            "p1score"
+        ],
+        "Player1Name": [
+            "p1name"
+        ],
+        "Player1Character": "p1char"
+    },
+    "twitter": {
+        "TokenSecret": "",
+        "ConsumerSecret": "",
+        "ConsumerKey": "",
+        "Token": ""
+    },
+    "YOUTUBE_DESCRIPTION": "",
+    "TWITCH_CHAT": ""
 }
