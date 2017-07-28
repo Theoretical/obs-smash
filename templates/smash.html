@@ -390,6 +390,18 @@
                     $("#smashgg-event-div").hide()
                     $("#smashgg-phase-div").hide()
                 }
+                else
+                {
+                    $.post('http://{{ ip }}:5000/tournament/events', {'url': challonge_id}, function(json) {
+                        phases = json['entities']['phase'];
+                        for(i = 0; i < json['entities']['event'].length; i++)
+                        {
+                            var ev = json['entities']['event'][i];
+                            $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
+
+                        }
+                    });
+                }
                 // Build data set of players.
                 $.post('http://{{ ip }}:5000/tournament/players', {'url': challonge_id, 'event': ev}, function(json) {
                     if (challonge_id.includes('challonge'))

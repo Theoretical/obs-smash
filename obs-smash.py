@@ -91,8 +91,9 @@ class Tournament(object):
         self.is_smash_gg = True
         url = request.form['url']
 
-        if url[-1] == '/': url = url[:-1]
-        slug = url.split('/')[-1]
+        if url[-1] == '/': url = url[:-2]
+        slug = url.split('/')[-2]
+        print(slug)
 
         self.slug = slug
         res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=phase'.format(slug=slug))
@@ -123,7 +124,7 @@ class Tournament(object):
         self.phases = []
         self.is_smash_gg = True
 
-        event_slug = url.split('smash.gg/')[1].split('/overview')[0].replace('/events/', '/event/')
+        event_slug = url.split('/')[-2] + '/event/'
         res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=entrants&expand[]=phase&expand[]=groups'.format(slug=self.slug))
         self.name = res.json()['entities']['tournament']['name']
 
