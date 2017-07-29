@@ -25,6 +25,7 @@
         var player2_score = 0;
         var is_recording = false;
         var phases = [];
+        var smashgg_matches = {};
 
         function update_scene_item(name, value, type){
             cmd = {
@@ -109,6 +110,9 @@
                         break;
                     case "smashgg_phases":
                         on_challonge();
+                        break;
+                    case "smashgg_pool":
+                        on_pool();
                         break;
                     case "matches":
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
@@ -389,6 +393,7 @@
                 {
                     $("#smashgg-event-div").hide()
                     $("#smashgg-phase-div").hide()
+                    $("#smashgg-pool-div").hide()
                 }
                 else
                 {
@@ -451,26 +456,44 @@
                         }
                     }
                     else {
-                        for (i = 0; i < json.length; i++)
-                        {
-                            var match = json[i];
+                        Object.keys(json).forEach(function (key){
+                            set = json[key];
+                            smashgg_matches[key] = {'matches': {}};
+                            $("#smashgg_pool").append('<li><a href="#" data-value="' + key + '">' + key + '</a></li>');
+                            for (i = 0; i < set['sets'].length; i++)
+                            {
+                                var match = set['sets'][i];
 
-                            if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
-                                continue
+                                if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                    continue
 
-                            var player_one = players[match['entrant1Id']];
-                            var player_two = players[match['entrant2Id']];
+                                var player_one = players[match['entrant1Id']];
+                                var player_two = players[match['entrant2Id']];
 
-                            if (player_one == undefined || player_two == undefined)
-                                console.log(i);
+                                if (player_one == undefined || player_two == undefined)
+                                    console.log(i);
 
-                            var match_str = player_one + ' VS. ' + player_two;
-                            matches[match['id']] = [player_one, player_two];
+                                var match_str = player_one + ' VS. ' + player_two;
+                                matches[match['id']] = [player_one, player_two];
+                                smashgg_matches[key]['matches'][match['id']] = match_str;
 
-                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                                //$("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
 
-                        }
+                            }
+                        });
                     }
+                });
+            }
+
+            function on_pool() {
+                var pool = $("#smashgg_pool").parents(".btn-group").find('.btn').val();
+                $('#matches')
+                    .find('li')
+                    .remove()
+                    .end()
+                var matches = smashgg_matches[pool]['matches'];
+                Object.keys(matches).forEach(function(key){
+                    $("#matches").append('<li><a href="#" data-value="' + key + '">' + matches[key] + '</a></li>');
                 });
             }
         });
@@ -518,6 +541,14 @@
                     <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_phases">
+                </ul>
+            </div>
+            <div class="btn-group" id="smashgg-pool-div">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu8" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Pool
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_pool">
                 </ul>
             </div>
             <div class="btn-group">

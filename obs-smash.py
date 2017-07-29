@@ -135,17 +135,20 @@ class Tournament(object):
             data = get('https://api.challonge.com/v1/tournaments/{id}/matches.json?api_key={key}'.format(id=self.slug, key=self.key)).json()
             return jsonify(data)
 
-        groups = []
+        groups = {}
         res = get('https://api.smash.gg/tournament/{slug}?expand[]=groups'.format(slug=self.slug))
         for group in res.json()['entities']['groups']:
             if group['phaseId'] == int(request.form['phase']):
-                groups.append(group['id'])
+                groups[group["displayIdentifier"]] = {'id': group['id']}
 
         data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=request.form['phase'])).json()
-        sets = []
-        for phase in groups:
-            data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase)).json()
-            sets.extend(data['entities']['sets'])
+        sets = {}
+        for tag, phase in groups.items():
+            data = get('https://api.smash.gg/phase_group/{phase}?expand[]=sets'.format(phase=phase['id'])).json()
+            if not tag in sets:
+                sets[tag] = {'sets': []}
+
+            sets[tag]['sets'].extend(data['entities']['sets'])
 
         return jsonify(sets)
 
