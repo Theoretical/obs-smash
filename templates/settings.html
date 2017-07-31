@@ -49,19 +49,19 @@
                     settings.YOUTUBE_KEYWORDS = $("#youtubeKeywords").val();
                     settings.TWITCH_CHAT = $("#twitchChat").val();
                     var scene = Object();
-                    scene.MatchType = $("#matchType").val().split("|")
-                    scene.Player1Name = $("#p1name").val().split("|");
-                    scene.Player2Name = $("#p2name").val().split("|");
-                    scene.Player1Twitter = $("#p1twitter").val().split("|");
-                    scene.Player2Twitter = $("#p2twitter").val().split("|");
-                    scene.Player1Score = $("#p1score").val().split("|");
-                    scene.Player2Score = $("#p2score").val().split("|");
+                    scene.MatchType = $("#matchType").val().split(",")
+                    scene.Player1Name = $("#p1name").val().split(",");
+                    scene.Player2Name = $("#p2name").val().split(",");
+                    scene.Player1Twitter = $("#p1twitter").val().split(",");
+                    scene.Player2Twitter = $("#p2twitter").val().split(",");
+                    scene.Player1Score = $("#p1score").val().split(",");
+                    scene.Player2Score = $("#p2score").val().split(",");
                     scene.Player1Character = $("#p1char").val();
                     scene.Player2Character = $("#p2char").val();
-                    scene.Commentator1Name = $("#c1name").val().split("|");
-                    scene.Commentator2Name = $("#c2name").val().split("|");
-                    scene.Commentator1Twitter = $("#c1twitter").val().split("|");
-                    scene.Commentator2Twitter = $("#c2twitter").val().split("|");
+                    scene.Commentator1Name = $("#c1name").val().split(",");
+                    scene.Commentator2Name = $("#c2name").val().split(",");
+                    scene.Commentator1Twitter = $("#c1twitter").val().split(",");
+                    scene.Commentator2Twitter = $("#c2twitter").val().split(",");
 
                     settings.scene = scene;
 
@@ -167,11 +167,11 @@
                         </tr>
                         <tr>
                             <td>Commentator 1 Twitter</td>
-                            <td><input type="text" class="form-control" id="c1name" placeholder="c1twitter"></td>
+                            <td><input type="text" class="form-control" id="c1twitter" placeholder="c1twitter"></td>
                         </tr>
                         <tr>
+                          <td><input type="text" class="form-control" id="c2twitter" placeholder="c2twitter"></td>
                             <td>Commentator 2 Twitter</td>
-                            <td><input type="text" class="form-control" id="c2name" placeholder="c2twitter"></td>
                         </tr>
                     <thead>
                         <tr>

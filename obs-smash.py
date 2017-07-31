@@ -29,8 +29,17 @@ def youtube_process(queue):
     while True:
         args = queue.get(block=True)
         print ('Now uploading: %s' % args)
-        youtube = get_authenticated_service(args)
-        initialize_upload(youtube, args)
+        while True:
+            try:
+                youtube = get_authenticated_service(args)
+                initialize_upload(youtube, args)
+            except Exception as e:
+                print ('Error on uploading, retrying in 5s.')
+                sleep(5)
+                continue
+            finally:
+                break
+
 
 class Tournament(object):
     def __init__(self):
@@ -116,7 +125,6 @@ class Tournament(object):
             print (res)
             print(res.content)
 
-            self.name = res.json()['tournament']['name']
             print ('%s | %s' % (challonge_id, team))
             return jsonify(get('https://api.challonge.com/v1/tournaments/{id}/participants.json?api_key={key}'.format(id=challonge_id, key=self.key)).json())
 
@@ -126,7 +134,6 @@ class Tournament(object):
 
         event_slug = url.split('/')[-2] + '/event/'
         res = get('https://api.smash.gg/tournament/{slug}?expand[]=event&expand[]=entrants&expand[]=phase&expand[]=groups'.format(slug=self.slug))
-        self.name = res.json()['entities']['tournament']['name']
 
         return jsonify(res.json())
 
@@ -153,6 +160,7 @@ class Tournament(object):
         return jsonify(sets)
 
     def on_challonge_update(self):
+        if not self.is_smash_gg: return
         url = 'https://api.challonge.com/v1/tournaments/{id}/matches/{match}.json?api_key={key}&match[scores_csv]={score}&match[winner_id]={winner}'.format(id=self.slug, match=request.form['match'],
             key=self.key, score=request.form['score'], winner=request.form['winner'])
         return jsonify(put(url).json())
@@ -213,13 +221,16 @@ class Tournament(object):
         player1 = request.form['player1']
         player2 = request.form['player2']
         matchType = request.form['matchType']
+        character1 = request.form['character1'].split('.png')[0].title()
+        character2 = request.form['character2'].split('.png')[0].title()
 
         # recording name. (max 100 char.)
-        recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament}'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name))[:100]
+        # EV [Wii U] - P1 (Char) vs P2 (Char) - Round
+        recording_name = sub(r'[<>:"/\|?*]', '', '{tournament} [Wii U] - {player1} ({character1}) vs {player2} ({character2}) - {matchType}'.format(character1=character1, character2=character2, matchType=matchType, player1=player1, player2=player2, tournament=self.name))[:100]
 
         n = 1
         while join(RECORDING_DIRECTORY, recording_name + '.flv') in file_list:
-            recording_name = sub(r'[<>:"/\|?*]', '', '{matchType}-{player1} vs. {player2} - {tournament} ({n})'.format(matchType=matchType, player1=player1, player2=player2, tournament=self.name, n=n))[:100]
+            recording_name = sub(r'[<>:"/\|?*]', '', '{tournament} [Wii U] - {player1} ({character1}) vs {player2} ({character2}) - {matchType}({n})'.format(character1=character1, character2=character2, matchType=matchType, player1=player1, player2=player2, tournament=self.name, n=n))[:100]
             n += 1
 
         file_name = join(RECORDING_DIRECTORY, recording_name + '.flv')
