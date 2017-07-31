@@ -1,43 +1,53 @@
 {
     "SPRITE_PATH2": "C:/Users/Everance/Documents/GitHub/obs-smash/static/sprites",
-    "SPRITE_PATH": "C:/Users/Everance/Documents/GitHub/obs-smash/static/sprites",
     "CHALLONGE_API_KEY": "",
     "YOUTUBE_KEYWORDS": "",
     "RECORDING_DIRECTORY": "",
+    "SPRITE_PATH": "C:/Users/Everance/Documents/GitHub/obs-smash/static/sprites",
+    "YOUTUBE_DESCRIPTION": "",
+    "twitter": {
+        "Token": "",
+        "ConsumerSecret": "",
+        "ConsumerKey": "",
+        "TokenSecret": ""
+    },
     "scene": {
-        "Commentator2Name": "",
-        "MatchType": [
-            "matchType"
+        "Player1Name": [
+            "p1name"
         ],
         "Player2Twitter": [
             ""
         ],
-        "Player1Twitter": [
+        "Commentator2Name": [
             ""
-        ],
-        "Player2Score": [
-            "p2score"
         ],
         "Player2Name": [
             "p2name",
             "Player2Test"
         ],
-        "Player2Character": "p1char",
-        "Commentator1Name": "",
+        "Player2Character": "p2char",
+        "MatchType": [
+            "matchType"
+        ],
+        "Player2Score": [
+            "p2score"
+        ],
+        "Commentator1Name": [
+            ""
+        ],
+        "Commentator2Twitter": [
+            ""
+        ],
+        "Player1Character": "p1char",
+        "Player1Twitter": [
+            ""
+        ],
+        "Commentator1Twitter": [
+            ""
+        ],
         "Player1Score": [
             "p1score"
-        ],
-        "Player1Name": [
-            "p1name"
-        ],
-        "Player1Character": "p1char"
+        ]
     },
-    "twitter": {
-        "TokenSecret": "",
-        "ConsumerSecret": "",
-        "ConsumerKey": "",
-        "Token": ""
-    },
-    "YOUTUBE_DESCRIPTION": "",
     "TWITCH_CHAT": ""
 }

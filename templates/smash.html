@@ -21,6 +21,8 @@
             if(msg['update-type'] == 'SwitchScenes')
             {
                $("#stream").click();
+               update_scene_item('{{ config.scene.Player1Character }}', image_path + CHARACTER1, 'file');
+               update_scene_item('{{ config.scene.Player2Character }}', image_path + CHARACTER2, 'file');
             }
         };
 
