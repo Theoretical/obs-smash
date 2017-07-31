@@ -68,6 +68,10 @@
         }
 
         $(document).ready(function() {
+            setInterval(function () {
+                console.log('calling.');
+                on_pool();
+            }, 10000);
             $("body").on('click', '.dropdown-menu li a', function(){
                 // hacky
                 var id = $(this).parents(".dropdown-menu").prop("id");
@@ -392,10 +396,6 @@
                     .find('li')
                     .remove()
                     .end()
-                $('#smashgg_phases')
-                    .find('li')
-                    .remove()
-                    .end()
 
                 $.post('http://{{ ip }}:5000/tournament/events', {'url': url}, function(json) {
                     phases = json['entities']['phase'];
@@ -438,10 +438,21 @@
                 {
                     $.post('http://{{ ip }}:5000/tournament/events', {'url': challonge_id}, function(json) {
                         phases = json['entities']['phase'];
+                        $('#smashgg_events')
+                            .find('li')
+                            .remove()
+                            .end()
+                        $('#smashgg_pools')
+                            .find('li')
+                            .remove()
+                            .end()
+                        $('#matches')
+                            .find('li')
+                            .remove()
+                            .end()
                         for(i = 0; i < json['entities']['event'].length; i++)
                         {
                             var ev = json['entities']['event'][i];
-
 
                             $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
 
@@ -497,6 +508,11 @@
                         }
                     }
                     else {
+
+                        $('#smashgg_pool')
+                            .find('li')
+                            .remove()
+                            .end()
                         Object.keys(json).forEach(function (key){
                             set = json[key];
                             smashgg_matches[key] = {'matches': {}};
@@ -528,6 +544,34 @@
 
             function on_pool() {
                 var pool = $("#smashgg_pool").parents(".btn-group").find('.btn').val();
+                $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
+
+                    Object.keys(json).forEach(function (key){
+                        set = json[key];
+                        smashgg_matches[key] = {'matches': {}};
+                        for (i = 0; i < set['sets'].length; i++)
+                        {
+                            var match = set['sets'][i];
+
+                            if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                continue
+
+                            var player_one = players[match['entrant1Id']];
+                            var player_two = players[match['entrant2Id']];
+
+                            if (player_one == undefined || player_two == undefined)
+                                console.log(i);
+
+                            var match_str = player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+                            smashgg_matches[key]['matches'][match['id']] = match_str;
+
+                            //$("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+
+                        }
+                    });
+                });
+
                 $('#matches')
                     .find('li')
                     .remove()
