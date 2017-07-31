@@ -69,13 +69,11 @@
 
         $(document).ready(function() {
             setInterval(function () {
-                console.log('calling.');
                 on_pool();
-            }, 10000);
+            }, 60000);
             $("body").on('click', '.dropdown-menu li a', function(){
                 // hacky
                 var id = $(this).parents(".dropdown-menu").prop("id");
-
                 $(this).parents(".btn-group").find('.btn').html($(this).text() + ' <span class="caret"></span>');
                 $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
 
@@ -130,6 +128,11 @@
                         break;
                     case "smashgg_pool":
                         on_pool();
+                        break;
+                    case "matchtype":
+                        {% for scene in config.scene.MatchType %}
+                            update_scene_item('{{ scene }}', $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+                        {% endfor %}
                         break;
                     case "matches":
                         var match_id = $("#matches").parents(".btn-group").find('.btn').val();
