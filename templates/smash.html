@@ -15,17 +15,6 @@
         <script>
 
         var ws = new ReconnectingWebSocket('ws://{{ip}}:4444');
-
-        ws.onmessage = function(arg) {
-            var msg = JSON.parse(arg.data);
-            if(msg['update-type'] == 'SwitchScenes')
-            {
-               $("#stream").click();
-               update_scene_item('{{ config.scene.Player1Character }}', image_path + CHARACTER1, 'file');
-               update_scene_item('{{ config.scene.Player2Character }}', image_path + CHARACTER2, 'file');
-            }
-        };
-
         var CURRENT_GAME = 'smash4';
         var image_path = '{{ config.SPRITE_PATH }}' + '/' + CURRENT_GAME + '/';
         var image_path2 = '{{ config.SPRITE_PATH2 }}' + '/' + CURRENT_GAME + '/';
@@ -39,6 +28,29 @@
         var smashgg_matches = {};
         var CHARACTER1 = "";
         var CHARACTER2 = "";
+        function sleep (time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+        }
+
+        ws.onmessage = function(arg) {
+            var msg = JSON.parse(arg.data);
+            if(msg['update-type'] == 'SwitchScenes')
+            {
+               $("#stream").click();
+               update_scene_item('{{ config.scene.Player1Character }}', image_path + CHARACTER1, 'file');
+               update_scene_item('{{ config.scene.Player2Character }}', image_path + CHARACTER2, 'file');
+            }
+            else {
+                if(msg.recording != undefined) {
+                    if (!is_recording && msg.recording) {
+                        // restart recording, even though we lose some VoDs? Lets check out how this unsyncs sometime w/ debug logs./
+                        ws.send(JSON.stringify({'request-type': 'StartStopRecording'})); // Stop recording.
+                        sleep(3000).then(() => {start_stop_recording();}); // Restart it.
+                    }
+                }
+            }
+        };
+
 
         function update_scene_item(name, value, type){
             cmd = {
@@ -69,8 +81,15 @@
 
         $(document).ready(function() {
             setInterval(function () {
+                // Update smash.gg brackets every 15s.
                 on_pool();
-            }, 60000);
+            }, 15000);
+
+            setInterval(function () {
+                // Check OBS recording status every 5s.
+                ws.send(JSON.stringify({'request-type': 'GetStreamingStatus'}));
+            }, 5000);
+
             $("body").on('click', '.dropdown-menu li a', function(){
                 // hacky
                 var id = $(this).parents(".dropdown-menu").prop("id");
@@ -166,7 +185,7 @@
             $('#challonge').on('input propertychange paste', function() {
                 if ($("#challonge").val() == '') return;
                 on_challonge();
-            });
+            }); 
 
             $("#playerswap").click(function()
             {
