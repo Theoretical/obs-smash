@@ -52,6 +52,7 @@ class Tournament(object):
         self.phases = []
         self.is_smash_gg = False
         self.app = Flask(__name__)
+        self.current_match = dict()
 
         try:
             self.twitter = Api(self.config['twitter']['ConsumerKey'], self.config['twitter']['ConsumerSecret'], self.config['twitter']['Token'], self.config['twitter']['TokenSecret'])
@@ -73,6 +74,7 @@ class Tournament(object):
         self.app.add_url_rule('/tournament/name', 'name', self.on_name, methods=['POST'])
         self.app.add_url_rule('/challonge/update', 'challonge_update', self.on_challonge_update, methods=['POST'])
         self.app.add_url_rule('/match/start', 'match_start', self.on_match_start, methods=['POST'])
+        self.app.add_url_rule('/match/status', 'match_status', self.on_match_status, methods=['GET', 'POST'])
         self.app.add_url_rule('/match/end', 'match_end', self.on_match_end, methods=['POST'])
         self.app.add_url_rule('/match/clip', 'match_clip', self.on_match_clip, methods=['POST'])
 
@@ -170,17 +172,25 @@ class Tournament(object):
         return jsonify({})
 
     def on_match_start(self):
+        player1twitter = request.form['player1twitter']
+        player2twitter = request.form['player2twitter']
         player1 = request.form['player1']
         player2 = request.form['player2']
         matchType = request.form['matchType']
         stream = self.config['TWITCH_CHAT']
+
+        self.current_match = dict(player1=player1, player2=player2, matchType=matchType)
         if stream:
             stream = stream.split('/chat')[0]
 
         if self.twitter:
-            self.twitter.PostUpdate("We're going live at {event}! @{player1} vs. @{player2} starting now in {round} at {stream}!".format(event=self.name, player1=player1, player2=player2, round=matchType, stream=stream))
+            self.twitter.PostUpdate("We're going live at {event}! @{player1} vs. @{player2} starting now in {round} at {stream}!".format(event=self.name, player1=player1twitter, player2=player2twitter, round=matchType, stream=stream))
 
         return jsonify({})
+
+
+    def on_match_status(self):
+        return jsonify(self.current_match)
 
     def on_match_clip(self):
         global YOUTUBE_QUEUE # global upload process.

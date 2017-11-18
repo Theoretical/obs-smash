@@ -6,6 +6,7 @@
         <script src="static/js/jquery.ddslick.min.js"></script>
         <script src="static/js/reconnecting-websocket.min.js"></script>
         <script src="static/js/characters.js"></script>
+        <script src="static/js/notify.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous"/>
@@ -42,10 +43,29 @@
             }
             else {
                 if(msg.recording != undefined) {
+                    if (is_recording && !msg.recording) {
+                        is_recording = false;
+                        $("#matchstatus").text('Start match!');
+                        $("#matchstatus").val('start');
+                    }
                     if (!is_recording && msg.recording) {
-                        // restart recording, even though we lose some VoDs? Lets check out how this unsyncs sometime w/ debug logs./
-                        ws.send(JSON.stringify({'request-type': 'StartStopRecording'})); // Stop recording.
-                        sleep(3000).then(() => {start_stop_recording();}); // Restart it.
+                        is_recording = true;
+                        $("#matchstatus").text('Stop match!');
+                        $("#matchstatus").val('stop');
+
+                        $.notify("Manager was reset please update stream info!", {clickToHide: true, autoHide: false, globalPosition: 'top center'});
+                        $.post('http://{{ ip }}:5000/match/status', function(json) {
+                            p1 = json.player1;
+                            p2 = json.player2;
+                            type = json.matchType;
+
+                            $("#p1label").text(p1);
+                            $("#p2label").text(p2);
+                            $("#player1Name").val(p1);
+                            $("#player2Name").val(p2);
+                            
+                        });
+
                     }
                 }
             }
@@ -88,7 +108,7 @@
             setInterval(function () {
                 // Check OBS recording status every 5s.
                 ws.send(JSON.stringify({'request-type': 'GetStreamingStatus'}));
-            }, 5000);
+            }, 2000);
 
             $("body").on('click', '.dropdown-menu li a', function(){
                 // hacky
@@ -287,9 +307,19 @@
                 if (val == 'start'){
                     $("#matchstatus").text('Stop match!');
                     $("#matchstatus").val('stop');
+                    
                     player1_score = 0
                     player2_score = 0;
-                    $.post('http://{{ ip }}:5000/match/start', {'player1': $("#player1Twitter").val(), 'player2': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                    if(!$("#manualmatches").prop('checked'))
+                    {
+                        var p1 = match[0]
+                        var p2 = match[1]
+                    }
+                    else {
+                        var p1 = $("#player1Name").val();
+                        var p2 = $("#player2Name").val();
+                    }
+                    $.post('http://{{ ip }}:5000/match/start', {'player1': p1, 'player2': p2, 'player1twitter': $("#player1Twitter").val(), 'player2twitter': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
                     $("#stream").click();
                     start_stop_recording();
                 }
@@ -599,10 +629,12 @@
                     .remove()
                     .end()
 
-                var matches = smashgg_matches[pool]['matches'];
-                Object.keys(matches).forEach(function(key){
-                    $("#matches").append('<li><a href="#" data-value="' + key + '">' + matches[key] + '</a></li>');
-                });
+                if (smashgg_matches[pool] != undefined) {
+                    var matches = smashgg_matches[pool]['matches'];
+                    Object.keys(matches).forEach(function(key){
+                        $("#matches").append('<li><a href="#" data-value="' + key + '">' + matches[key] + '</a></li>');
+                    });
+                }
             }
         });
         </script>
