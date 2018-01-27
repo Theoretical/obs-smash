@@ -43,12 +43,15 @@
             }
             else {
                 if(msg.recording != undefined) {
+                    console.log(msg.recording);
                     if (is_recording && !msg.recording) {
+                        console.log('Swapping mode to recording since it was recording and we are not');
                         is_recording = false;
                         $("#matchstatus").text('Start match!');
                         $("#matchstatus").val('start');
                     }
                     if (!is_recording && msg.recording) {
+                        console.log('Turning off recording since it was recording and we are not');
                         is_recording = true;
                         $("#matchstatus").text('Stop match!');
                         $("#matchstatus").val('stop');
@@ -108,7 +111,7 @@
             setInterval(function () {
                 // Check OBS recording status every 5s.
                 ws.send(JSON.stringify({'request-type': 'GetStreamingStatus'}));
-            }, 2000);
+            }, 5000);
 
             $("body").on('click', '.dropdown-menu li a', function(){
                 // hacky
@@ -302,36 +305,40 @@
                 }
             });
             $("#matchstatus").click(function(){
-                var val = $("#matchstatus").val();
 
+                var val = $("#matchstatus").val();
+                console.log("Button clicked ==> " + val);
                 if (val == 'start'){
-                    $("#matchstatus").text('Stop match!');
-                    $("#matchstatus").val('stop');
-                    
-                    player1_score = 0
-                    player2_score = 0;
-                    if(!$("#manualmatches").prop('checked'))
-                    {
-                        var p1 = match[0]
-                        var p2 = match[1]
-                    }
-                    else {
-                        var p1 = $("#player1Name").val();
-                        var p2 = $("#player2Name").val();
-                    }
-                    $.post('http://{{ ip }}:5000/match/start', {'player1': p1, 'player2': p2, 'player1twitter': $("#player1Twitter").val(), 'player2twitter': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
-                    $("#stream").click();
-                    start_stop_recording();
+                        $("#matchstatus").text('Stop match!');
+                        $("#matchstatus").val('stop');
+                        
+                        player1_score = 0
+                        player2_score = 0;
+                        if(!$("#manualmatches").prop('checked'))
+                        {
+                            var p1 = match[0]
+                            var p2 = match[1]
+                        }
+                        else {
+                            var p1 = $("#player1Name").val();
+                            var p2 = $("#player2Name").val();
+                        }
+                        $.post('http://{{ ip }}:5000/match/start', {'player1': p1, 'player2': p2, 'player1twitter': $("#player1Twitter").val(), 'player2twitter': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                        $("#stream").click();
+                        start_stop_recording();
                 }
-                else
-                {
+                else {
                     $("#matchstatus").text('Start match!');
-                    $("#matchstatus").val('start');
-                    if (!$("#manualmatches").prop('checked'))
-                        on_challonge();
-                    $("#stream").click();
-                    start_stop_recording();
+                        $("#matchstatus").val('start');
+                        if (!$("#manualmatches").prop('checked'))
+                            on_challonge();
+                        $("#stream").click();
+                        start_stop_recording();
                 }
+                $("#matchstatus").prop('disabled', 'true');
+                setTimeout(function() {
+                    $("#matchstatus").prop('disabled', '');
+                }, 5000);
             });
 
             $("#stream").click(function(){
