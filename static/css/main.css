@@ -1,12 +1,12 @@
 #feedback { font-size: 1.4em; }
 #selectable .ui-selecting {  border-style: solid; border-color: green; border-width: medium;}
 #selectable .ui-selected {  border-style: solid; border-color: green; border-width: medium;}
-#selectable { list-style-type: none; margin: 0; padding: 0; width: 450px;}
-#selectable li { margin: 3px; padding: 1px; float: left; width: 75px; height: 75px; font-size: 4em; text-align: center; }
+#selectable { list-style-type: none; margin: 0; padding: 0; width: 450px; background-color: black;}
+#selectable li { margin: 3px; padding: 1px; float: left; width: 75px; height: 75px; font-size: 4em; text-align: center; background-color: black;}
 #selectable2 .ui-selecting {  border-style: solid; border-color: red; border-width: medium;}
 #selectable2 .ui-selected {  border-style: solid; border-color: red; border-width: medium;}
-#selectable2 { list-style-type: none; margin: 0; padding: 0; width: 450px;}
-#selectable2 li { margin: 3px; padding: 1px; float: left; width: 75px; height: 75px; font-size: 4em; text-align: center; }
+#selectable2 { list-style-type: none; margin: 0; padding: 0; width: 450px; background-color: black;}
+#selectable2 li { margin: 3px; padding: 1px; float: left; width: 75px; height: 75px; font-size: 4em; text-align: center; background-color: black;}
 
 .character-select {
     width:950px;

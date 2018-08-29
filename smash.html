@@ -1,0 +1,871 @@
+<html>
+    <head>
+        <title>Salty Sundays Stream Manager</title>
+        <script>if (typeof module === 'object') { window.module = module; module = undefined; }</script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script src="static/js/jquery.ddslick.min.js"></script>
+        <script src="static/js/reconnecting-websocket.min.js"></script>
+        <script src="static/js/characters.js"></script>
+        <script src="static/js/notify.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+        <script>if (window.module) module = window.module;</script>
+        <link rel="stylesheet" href="static/css/jquery-ui.css">
+        <link href="https://stackpath.bootstrapcdn.com/bootswatch/4.1.3/cyborg/bootstrap.min.css" rel="stylesheet" integrity="sha384-4DAPMwiyOJv/C/LvTiUsW5ueiD7EsaAhwUKO0Llp+fWzT40XrmAbayhVP00bAJVa" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous"/>
+        <link rel="stylesheet" href="static/css/main.css"/>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+        <script>
+        
+        var ws = new ReconnectingWebSocket('ws://127.0.0.1:4444');
+        var config = require('./config.json');
+        var CURRENT_GAME = 'smash4';
+        var image_path = config.SPRITE_PATH + '/' + CURRENT_GAME + '/';
+        var image_path2 = config.SPRITE_PATH2 + '/' + CURRENT_GAME + '/';
+        var players = {};
+        var players_reverse = {};
+        var matches = {};
+        var player1_score = 0;
+        var player2_score = 0;
+        var is_recording = false;
+        var phases = [];
+        var smashgg_matches = {};
+        var CHARACTER1 = "";
+        var CHARACTER2 = "";
+
+        // ipc 
+        var {ipcRenderer, remote} = require('electron');  
+        var main = remote.require("./main.js");
+
+
+
+        function sleep (time) {
+            return new Promise((resolve) => setTimeout(resolve, time));
+        }
+
+
+        ws.onmessage = function(arg) {
+            var msg = JSON.parse(arg.data);
+            if(msg['update-type'] == 'SwitchScenes')
+            {
+               $("#stream").click();
+               update_scene_item('{{ config.scene.Player1Character }}', image_path + CHARACTER1, 'file');
+               update_scene_item('{{ config.scene.Player2Character }}', image_path + CHARACTER2, 'file');
+            }
+            else {
+                if(msg.recording != undefined) {
+                    console.log(msg.recording);
+                    if (is_recording && !msg.recording) {
+                        console.log('Swapping mode to recording since it was recording and we are not');
+                        is_recording = false;
+                        $("#matchstatus").text('Start match!');
+                        $("#matchstatus").val('start');
+                    }
+                    if (!is_recording && msg.recording) {
+                        console.log('Turning off recording since it was recording and we are not');
+                        is_recording = true;
+                        $("#matchstatus").text('Stop match!');
+                        $("#matchstatus").val('stop');
+
+                        $.notify("Manager was reset please update stream info!", {clickToHide: true, autoHide: false, globalPosition: 'top center'});
+                        $.post('http://{{ ip }}:5000/match/status', function(json) {
+                            p1 = json.player1;
+                            p2 = json.player2;
+                            type = json.matchType;
+
+                            $("#p1label").text(p1);
+                            $("#p2label").text(p2);
+                            $("#player1Name").val(p1);
+                            $("#player2Name").val(p2);
+                            
+                        });
+
+                    }
+                }
+            }
+        };
+
+
+        function update_scene_item(name, value, type){
+            cmd = {
+                'request-type': 'SetSourceSettings',
+                'message-id': '1',
+                'sourceName': name,
+                'sourceSettings': {
+                }
+            }
+
+            cmd['sourceSettings'][type] = value
+            ws.send(JSON.stringify(cmd));
+        }
+
+        function start_stop_recording(){
+            is_recording = !is_recording;
+            console.log('Recording: ' + is_recording);
+            //ws.send(JSON.stringify({'request-type': 'StartStopRecording'}));
+
+            if (!is_recording)
+            {
+                if (!$("#manualmatches").prop('checked')) {
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+                    $.post('http://{{ ip }}:5000/match/end', {'character1': CHARACTER1, 'character2': CHARACTER2, 'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                } else {
+                    $.post('http://{{ ip }}:5000/match/end', {'character1': CHARACTER1, 'character2': CHARACTER2, 'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                }
+            }
+        }
+
+        $(document).ready(function() {
+            setInterval(function () {
+                // Update smash.gg brackets every 15s.
+                on_pool();
+            }, 15000);
+
+            setInterval(function () {
+                // Check OBS recording status every 5s.
+                ws.send(JSON.stringify({'request-type': 'GetStreamingStatus'}));
+            }, 5000);
+
+            $("body").on('click', '.dropdown-menu li a', function(){
+                // hacky
+                var id = $(this).parents(".dropdown-menu").prop("id");
+                $(this).parents(".btn-group").find('.btn').html($(this).text() + ' <span class="caret"></span>');
+                $(this).parents(".btn-group").find('.btn').val($(this).data('value'));
+
+                switch(id)
+                {
+                    case "currentgame":
+                        CURRENT_GAME =$("#currentgame").parents(".btn-group").find('.btn').val();
+                        image_path = '{{ config.SPRITE_PATH }}' + '/'+ CURRENT_GAME + '/';
+                        image_path2 = '{{ config.SPRITE_PATH2 }}' + '/' + CURRENT_GAME + '/';
+                        $('#selectable')
+                            .find('li')
+                            .remove()
+                            .end();
+                        $('#selectable2')
+                            .find('li')
+                            .remove()
+                            .end()
+
+                        $.each(CHARACTER_SPRITES[CURRENT_GAME], function(index, value)
+                        {
+                            $("#selectable").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                            $("#selectable2").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                        });
+
+                        $("#player1char").ddslick({
+                            data: CHARACTER_SPRITES[CURRENT_GAME],
+                            width: 300,
+                            selectText: 'Select Player 1\'s character',
+                            imagePosition:"right",
+                            onSelected: function(selectedData){
+                                data = selectedData.selectedData;
+                                $('#player1val').val(data.value);
+                            }
+                        });
+
+                        $("#player2char").ddslick({
+                            data: CHARACTER_SPRITES[CURRENT_GAME],
+                            width: 300,
+                            selectText: 'Select Player 2\'s character',
+                            imagePosition:"right",
+                            onSelected: function(selectedData){
+                                data = selectedData.selectedData;
+                                $('#player2val').val(data.value);
+                            }
+                        });
+                        break;
+                    case "smashgg_events":
+                        get_phases();
+                        break;
+                    case "smashgg_phases":
+                        on_challonge();
+                        break;
+                    case "smashgg_pool":
+                        on_pool();
+                        break;
+                    case "matchtype":
+                        $(config.scene.MatchType).each(function(index, match)
+                        {
+                            update_scene_item(match, $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+                        });
+                        break;
+                    case "matches":
+                        var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                        var match = matches[match_id];
+
+                        $("#p1label").text(match[0]);
+                        $("#p2label").text(match[1]);
+                        $("#player1Name").val(match[0]);
+                        $("#player2Name").val(match[1]);
+
+                        $(config.scene.Player1Name).each(function(index, scene)
+                        {
+                            update_scene_item(scene, match[0], 'text');
+                        });
+
+                        $(config.scene.Player2Name).each(function(index, scene)
+                        {
+                            update_scene_item(scene, match[0], 'text');
+                        });
+                        $("#manualmatches").prop('checked', false);
+                        break;
+                    case "p1Score":
+                        $(config.scene.Player1Score).each(function(index, scene)
+                        {
+                            update_scene_item(scene, $("#p1Score").parents(".btn-group").find('.btn').val(), 'text');
+                        });
+                        break;
+                    case "p2Score":
+                        $(config.scene.Player2Score).each(function(index, scene)
+                        {
+                            update_scene_item(scene, $("#p12Score").parents(".btn-group").find('.btn').val(), 'text');
+                        });
+                        break;
+                }
+            });
+
+            $('#challonge').on('input propertychange paste', function() {
+                if ($("#challonge").val() == '') return;
+                on_challonge();
+            }); 
+
+            $("#playerswap").click(function()
+            {
+                var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                var match = matches[match_id];
+
+                var newPlayerOne = match[1];
+                var newPlayerTwo = match[0];
+
+                matches[match_id] = [newPlayerOne, newPlayerTwo];
+                var match = matches[match_id];
+
+                $("#p1label").text(match[0]);
+                $("#p2label").text(match[1]);
+                $("#player1Name").val(match[0]);
+                $("#player2Name").val(match[1]);
+
+                if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                {
+                    
+                    $(config.scene.Player1Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, $("#player1Name").val(), 'text');
+                    });
+
+                    $(config.scene.Player2Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, $("#player2Name").val(), 'text');
+                    });
+                }
+                else {
+                    $(config.scene.Player1Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, match[0], 'text');
+                    });
+
+                    $(config.scene.Player2Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, match[0], 'text');
+                    });
+                }
+            });
+
+            $.each(CHARACTER_SPRITES[CURRENT_GAME], function(index, value)
+            {
+                $("#selectable").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+                $("#selectable2").append('<li class="ui-state-default" style="background-image: url(\''+ value.imageSrc + '\'); no-repeat;  background-size: 100%;" value="' + value.value + '"></li>');
+            });
+
+
+
+            $( "#selectable" ).selectable({
+                selected:function(event, ui)
+                {
+                    CHARACTER1 = $(ui.selected).attr('value');
+                    update_scene_item('{{ config.scene.Player1Character }}', image_path + $(ui.selected).attr('value'), 'file');
+                }
+            });
+            $( "#selectable2" ).selectable({
+                selected:function(event, ui)
+                {
+                    CHARACTER2 = $(ui.selected).attr('value');
+                    update_scene_item('{{ config.scene.Player2Character }}', image_path2 + $(ui.selected).attr('value'), 'file');
+                }
+            });
+
+            $("#player1char").ddslick({
+                data: CHARACTER_SPRITES[CURRENT_GAME],
+                width: 300,
+                selectText: 'Select Player 1\'s character',
+                imagePosition:"right",
+                onSelected: function(selectedData){
+                    data = selectedData.selectedData;
+                    $("#player1val").attr('name', data.text);
+                    $('#player1val').val(data.value);
+                }
+            });
+
+            $("#player2char").ddslick({
+                data: CHARACTER_SPRITES[CURRENT_GAME],
+                width: 300,
+                selectText: 'Select Player 2\'s character',
+                imagePosition:"right",
+                onSelected: function(selectedData){
+                    data = selectedData.selectedData;
+                    $("#player2val").attr('name', data.text);
+                    $('#player2val').val(data.value);
+                }
+            });
+
+            $("#replaystatus").click(function() {
+                ws.send(JSON.stringify({'request-type': 'SaveReplay'}));
+                if (!$("#manualmatches").prop('checked')) {
+                    var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                    var match = matches[match_id];
+                    $.post('http://{{ ip }}:5000/match/clip', {'player1': match[0], 'player2': match[1], 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                } else {
+                    $.post('http://{{ ip }}:5000/match/clip', {'player1': $("#player1Name").val(), 'player2': $("#player2Name").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                }
+            });
+            $("#matchstatus").click(function(){
+
+                var val = $("#matchstatus").val();
+                console.log("Button clicked ==> " + val);
+                if (val == 'start'){
+                        $("#matchstatus").text('Stop match!');
+                        $("#matchstatus").val('stop');
+                        
+                        player1_score = 0
+                        player2_score = 0;
+                        if(!$("#manualmatches").prop('checked'))
+                        {
+                            var p1 = match[0]
+                            var p2 = match[1]
+                        }
+                        else {
+                            var p1 = $("#player1Name").val();
+                            var p2 = $("#player2Name").val();
+                        }
+                        $.post('http://{{ ip }}:5000/match/start', {'player1': p1, 'player2': p2, 'player1twitter': $("#player1Twitter").val(), 'player2twitter': $("#player2Twitter").val(), 'matchType': $("#matchtype").parents(".btn-group").find('.btn').val()}, function(){});
+                        $("#stream").click();
+                        start_stop_recording();
+                }
+                else {
+                    $("#matchstatus").text('Start match!');
+                        $("#matchstatus").val('start');
+                        if (!$("#manualmatches").prop('checked'))
+                            on_challonge();
+                        $("#stream").click();
+                        start_stop_recording();
+                }
+                $("#matchstatus").prop('disabled', 'true');
+                setTimeout(function() {
+                    $("#matchstatus").prop('disabled', '');
+                }, 5000);
+            });
+
+            $("#stream").click(function(){
+                // This is very barebones right now.
+                var match_id = $("#matches").parents(".btn-group").find('.btn').val();
+                var match = matches[match_id];
+                var player1_score = Number($("#p1Score").parents(".btn-group").find('.btn').val());
+                var player2_score = Number($("#p2Score").parents(".btn-group").find('.btn').val());
+
+                if ($("#matchtype").parents(".btn-group").find('.btn').val() == '(Friendlies)' || $("#manualmatches").prop('checked'))
+                {
+                    $(config.scene.Player1Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, $("#player1Name").val(), 'text');
+                    });
+
+                    $(config.scene.Player2Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, $("#player2Name").val(), 'text');
+                    });
+                    $("#p1label").text($("#player1Name").val());
+                    $("#p2label").text($("#player2Name").val());
+                }
+                else {
+                    $(config.scene.Player1Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, match[0], 'text');
+                    });
+
+                    $(config.scene.Player2Name).each(function(index, scene)
+                    {
+                        update_scene_item(scene, match[0], 'text');
+                    });
+                    $("#p1label").text(match[0]);
+                    $("#p2label").text(match[1]);
+                }
+                
+                $(config.scene.Player1Score).each(function(index, scene) {
+                    update_scene_item(scene, player1_score.toString(), 'text');
+                });
+
+                $(config.scene.Player2Score).each(function(index, scene) {
+                    update_scene_item(scene, player2_score.toString(), 'text');
+                });
+
+                $(config.scene.Player1Twitter).each(function(index, scene) {
+                    update_scene_item(scene, $("#player1Twitter").val(), 'text');
+                });
+
+                $(config.scene.Player2Twitter).each(function(index, scene) {
+                    update_scene_item(scene, $("#player2Twitter").val(), 'text');
+                });
+
+                $(config.scene.Commentator1Name).each(function(index, scene) {
+                    update_scene_item(scene, $("#c1Name").val(), 'text');
+                });
+
+                $(config.scene.Commentator2Name).each(function(index, scene) {
+                    update_scene_item(scene, $("#c2Name").val(), 'text');
+                });
+
+                $(config.scene.Commentator1Twitter).each(function(index, scene) {
+                    update_scene_item(scene, $("#c1twitter").val(), 'text');
+                });
+
+                $(config.scene.Commentator1Twitter).each(function(index, scene) {
+                    update_scene_item(scene, $("#c2twitter").val(), 'text');
+                });
+
+                $(config.scene.MatchType).each(function(index, scene) {
+                    update_scene_item(scene, $("#matchtype").parents(".btn-group").find('.btn').val(), 'text');
+                });
+                
+                score = player1_score + '-' + player2_score
+
+                var winner = ''
+                var setcount = Number($("#settype").parents(".btn-group").find('.btn').val());
+
+                if (!$("#manualmatches").prop('checked'))
+                {
+                    if (player1_score == setcount)
+                        winner = players_reverse[match[0]]
+                    else if(player2_score == setcount)
+                        winner = players_reverse[match[1]]
+
+                if (!$("#manualmatches").prop('checked'))
+                    $.post('http://{{ ip }}:5000/challonge/update', {'score': score, 'match': match_id, 'winner': winner}, function(json){});
+                }
+
+            });
+
+            $("#manualmatches").click(function()
+            {
+                if (!$("#manualmatches").prop('checked'))
+                {
+                    $("#player1Name").attr('readonly', 'readonly');
+                    $("#player2Name").attr('readonly', 'readonly');
+                }
+                else
+                {
+                    $("#player1Name").attr('readonly', null);
+                    $("#player2Name").attr('readonly', null);
+                }
+            });
+
+            $("#on_name").click(function(e)
+            {
+                e.preventDefault();
+                var name = $("#tournamentname").val();
+                $.post('http://{{ ip }}:5000/tournament/name', {'name': name}, function(json) {});
+            });
+
+            $("#on_events").click(function(e)
+            {
+                e.preventDefault();
+                var url = $("#challonge").val();
+                $('#smashgg_events')
+                    .find('li')
+                    .remove()
+                    .end()
+
+                $.post('http://{{ ip }}:5000/tournament/events', {'url': url}, function(json) {
+                    phases = json['entities']['phase'];
+                    for(i = 0; i < json['entities']['event'].length; i++)
+                    {
+                        var ev = json['entities']['event'][i];
+                        $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
+
+                    }
+                });
+                //smashgg_events
+            });
+
+            function get_phases(){
+                var ev = Number($("#smashgg_events").parents(".btn-group").find('.btn').val());
+                $('#smashgg_phases')
+                    .find('li')
+                    .remove()
+                    .end()
+                for (i = 0; i < phases.length; i++)
+                {
+                    if (phases[i]['eventId'] == ev)
+                    {
+                        $("#smashgg_phases").append('<li><a href="#" data-value="' + phases[i]['id'] + '">' + phases[i]['name'] + '</a></li>');
+                    }
+                }
+            }
+
+            function on_challonge() {
+                var challonge_id = $("#challonge").val();
+                var ev = $("#smashgg_events").parents(".btn-group").find('.btn').val();
+
+                if (challonge_id.includes('challonge'))
+                {
+                    $("#smashgg-event-div").hide()
+                    $("#smashgg-phase-div").hide()
+                    $("#smashgg-pool-div").hide()
+                }
+                else
+                {
+                    $.post('http://{{ ip }}:5000/tournament/events', {'url': challonge_id}, function(json) {
+                        phases = json['entities']['phase'];
+                        $('#smashgg_events')
+                            .find('li')
+                            .remove()
+                            .end()
+                        $('#smashgg_pools')
+                            .find('li')
+                            .remove()
+                            .end()
+                        $('#matches')
+                            .find('li')
+                            .remove()
+                            .end()
+                        for(i = 0; i < json['entities']['event'].length; i++)
+                        {
+                            var ev = json['entities']['event'][i];
+
+                            $("#smashgg_events").append('<li><a href="#" data-value="' + ev['id'] + '">' + ev['name'] + '</a></li>');
+
+                        }
+                    });
+                }
+                // Build data set of players.
+                $.post('http://{{ ip }}:5000/tournament/players', {'url': challonge_id, 'event': ev}, function(json) {
+                    if (challonge_id.includes('challonge'))
+                    {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var participant = json[i]['participant'];
+                            players[participant['id']] = participant['display_name'];
+                            players_reverse[participant['display_name']] = participant['id'];
+                        }
+                    }
+                    else
+                    {
+                        var player_objs = json['entities']['entrants'];
+                        for (i = 0; i < player_objs.length; i++)
+                        {
+                            var p = player_objs[i];
+                            if (p == undefined) { break; }
+
+                            players[p['id']] = p['name'];
+                            players_reverse[p['name']] = p['id'];
+                        }
+                    }
+                });
+
+                // Build data set of matches.
+                $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
+                    $('#matches')
+                        .find('li')
+                        .remove()
+                        .end()
+
+                    if (challonge_id.includes('challonge'))
+                    {
+                        for (i = 0; i < json.length; i++)
+                        {
+                            var match = json[i]['match'];
+                            console.log(match['round']);
+                            var player_one = players[match['player1_id']];
+                            var player_two = players[match['player2_id']];
+
+                            var round = match['round'] > 0 ? "Winners" : "Losers"
+                            var match_str = '[' + round + ']' + player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+
+                            $("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+                        }
+                    }
+                    else {
+
+                        $('#smashgg_pool')
+                            .find('li')
+                            .remove()
+                            .end()
+                        Object.keys(json).forEach(function (key){
+                            set = json[key];
+                            smashgg_matches[key] = {'matches': {}};
+                            $("#smashgg_pool").append('<li><a href="#" data-value="' + key + '">' + key + '</a></li>');
+                            for (i = 0; i < set['sets'].length; i++)
+                            {
+                                var match = set['sets'][i];
+
+                                if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                    continue
+
+                                var player_one = players[match['entrant1Id']];
+                                var player_two = players[match['entrant2Id']];
+
+                                if (player_one == undefined || player_two == undefined)
+                                    console.log(i);
+
+                                var match_str = player_one + ' VS. ' + player_two;
+                                matches[match['id']] = [player_one, player_two];
+                                smashgg_matches[key]['matches'][match['id']] = match_str;
+
+                                //$("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+
+                            }
+                        });
+                    }
+                });
+            }
+
+            function on_pool() {
+                var pool = $("#smashgg_pool").parents(".btn-group").find('.btn').val();
+                $.post('http://{{ ip }}:5000/tournament/brackets', {'phase': $("#smashgg_phases").parents(".btn-group").find('.btn').val()}, function(json) {
+
+                    Object.keys(json).forEach(function (key){
+                        set = json[key];
+                        smashgg_matches[key] = {'matches': {}};
+                        for (i = 0; i < set['sets'].length; i++)
+                        {
+                            var match = set['sets'][i];
+
+                            if (match['entrant2PrereqType'] == 'bye' || match['entrant1Id'] == undefined || match['entrant2Id'] == 'undefined')
+                                continue
+
+                            var player_one = players[match['entrant1Id']];
+                            var player_two = players[match['entrant2Id']];
+
+                            if (player_one == undefined || player_two == undefined)
+                                console.log(i);
+
+                            var match_str = player_one + ' VS. ' + player_two;
+                            matches[match['id']] = [player_one, player_two];
+                            smashgg_matches[key]['matches'][match['id']] = match_str;
+
+                            //$("#matches").append('<li><a href="#" data-value="' + match['id'] + '">' + match_str + '</a></li>');
+
+                        }
+                    });
+                });
+
+                $('#matches')
+                    .find('li')
+                    .remove()
+                    .end()
+
+                if (smashgg_matches[pool] != undefined) {
+                    var matches = smashgg_matches[pool]['matches'];
+                    Object.keys(matches).forEach(function(key){
+                        $("#matches").append('<li><a href="#" data-value="' + key + '">' + matches[key] + '</a></li>');
+                    });
+                }
+            }
+        });
+        </script>
+    </head>
+    <body>
+        <div class="container" style="margin-top: 10px;">
+            <div class="input-group">
+                <input type="text" class="form-control" id="challonge" placeholder="Challonge link">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button">Get Challonge Matches</button>
+                    <button class="btn btn-info" type="button" id="on_events">Get SmashGG Events</button>
+                </span>
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control" id="tournamentname" placeholder="Tournament Name">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" id="on_name">Set Tournament Name</button>
+                </span>
+            </div>
+            <br/>
+            <div class="btn-group">
+                <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Current Game
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2" id="currentgame">
+                    <li value="2"><a href="#" data-value="smash4">Smash 4</a></li>
+                    <li value="3"><a href="#" data-value="injustice2">Injustice 2</a></li>
+                    <li value="3"><a href="#" data-value="melee">Melee</a></li>
+                    <li value="3"><a href="#" data-value="ggxrdrev2">Guilty Gear XRD: Rev2</a></li>
+                </ul>
+          </div>
+            <div class="btn-group" id="smashgg-event-div">
+                <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Events
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu4" id="smashgg_events">
+                </ul>
+            </div>
+            <div class="btn-group" id="smashgg-phase-div">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Phases
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_phases">
+                </ul>
+            </div>
+            <div class="btn-group" id="smashgg-pool-div">
+                <button class="btn btn-warning dropdown-toggle" type="button" id="dropdownMenu8" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    SmashGG Pool
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu5" id="smashgg_pool">
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                    Player Matches
+                    <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu1" id="matches">
+                </ul>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Set Type
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu2" id="settype">
+                    <li value="2"><a href="#" data-value="2">BO3</a></li>
+                    <li value="3"><a href="#" data-value="3">BO5</a></li>
+                </ul>
+          </div>
+          <div class="btn-group">
+              <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu3" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                Match Type
+                <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenu3" id="matchtype">
+                  <li><a href="#" data-><a href="#" data-value="(Friendlies)">(Friendlies)</a></li>
+                  <li><a href="#" data-><a href="#" data-value="Friendlies">Friendlies</a></li>
+                  <li><a href="#" data-><a href="#" data-value="Pools">Pools</a></li>
+                  <li><a href="#" data-value="[W] Round 1">[W] Round 1</a></li>
+                  <li><a href="#" data-value="[W] Round 2">[W] Round 2</a></li>
+                  <li><a href="#" data-value="[W] Round 3">[W] Round 3</a></li>
+                  <li><a href="#" data-value="[W] Round 4">[W] Round 4</a></li>
+                  <li><a href="#" data-value="[W] Round 5">[W] Round 5</a></li>
+                  <li><a href="#" data-value="[W] Round 6">[W] Round 6</a></li>
+                  <li><a href="#" data-value="Winners Quarters">Winners Quarters</a></li>
+                  <li><a href="#" data-value="Winners Semis">Winners Semis</a></li>
+                  <li><a href="#" data-value="Winners Finals">Winners Finals</a></li>
+                  <li><a href="#" data-value="[L] Round 1">[L] Round 1</a></li>
+                  <li><a href="#" data-value="[L] Round 2">[L] Round 2</a></li>
+                  <li><a href="#" data-value="[L] Round 3">[L] Round 3</a></li>
+                  <li><a href="#" data-value="[L] Round 4">[L] Round 4</a></li>
+                  <li><a href="#" data-value="[L] Round 5">[L] Round 5</a></li>
+                  <li><a href="#" data-value="[L] Round 6">[L] Round 6</a></li>
+                  <li><a href="#" data-value="Losers Quarters">Losers Quarters</a></li>
+                  <li><a href="#" data-value="Losers Semis">Losers Semis</a></li>
+                  <li><a href="#" data-value="Losers Finals">Losers Finals</a></li>
+                  <li><a href="#" data-value="Grand Finals">Grand Finals</a></li>
+                  <li><a href="#" data-value="Grand Finals [Set 2]">Grand Finals [Set 2]</a></li>
+                  <li><a href="#" data-value="M$ney M$tch">M$ney M$tch</a></li>
+                  <li><a href="#" data-value="Pineapple Pizza CB">Pineapple Pizza CB</a></li>
+              </ul>
+          </div>
+          <div class="btn-group pull-right">
+            <a href='/settings' class="btn btn-default" role="button">Settings</a>
+          </div>
+            <br/><br/>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>Player Tags: <input type="checkbox" id="manualmatches" checked/></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr><td>Player 1: </td><td><input type="text" class="form-control" placeholder="Everance" aria-describedby="basic-addon1" id="player1Name"/></td><td><i class="fa fa-gamepad" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="EveranceSmash" aria-describedby="basic-addon1" id="player1Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td>
+                <tr><td>Player 2: </i></td><td><input type="text" class="form-control" placeholder="Mr. Postman" aria-describedby="basic-addon1" id="player2Name"/></td><td><i class="fa fa-gamepad" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="gsmVoid" aria-describedby="basic-addon1" id="player2Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td></tr>
+                <tr><td>Commentator 1: </td><td><input type="text" class="form-control" placeholder="D1" aria-describedby="basic-addon1" id="c1Name"/></td><td><i class="fa fa-headphones" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="xD1x" aria-describedby="basic-addon1" id="c2Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td></tr>
+                <tr><td>Commentator 2: </i></td><td><input type="text" class="form-control" placeholder="Keitaro" aria-describedby="basic-addon1" id="c2Name"/></td><td><i class="fa fa-headphones" style="color: crimson"></i></td><td><input type="text" class="form-control" placeholder="KeitaroTime" aria-describedby="basic-addon1" id="c1Twitter"/></td><td><i class="fa fa-twitter" style="color: #00aced;"></i></td>
+
+            </tbody>
+            </tr>
+        </table>
+
+        <div class="btn-group" role="group" aria-label="...">
+            <button type="button" class="btn btn-success" id="matchstatus" value="start"><span class="glyphicon glyphicon-play" aria-hidden="true"></span> Start match</button>
+            <button type="button" class="btn btn-primary" id="replaystatus" value="start"><span class="fa fa-youtube-play" aria-hidden="true"></span> Clip that shit</button>
+            <button type="button" class="btn btn-info" id="stream"><span class="glyphicon glyphicon-refresh" aria-hidden="true"></span> Update Stream</button>
+            <button type="button" class="btn btn-danger" id="playerswap"><span class="glyphicon glyphicon-resize-horizontal" aria-hidden="true"></span> Swap players</button>
+        </div>
+
+        <br/><br/>
+        <input type="hidden" id="player1val" />
+        <input type="hidden" id="player2val" />
+
+        <div class="character-select-score">
+            <div class="player-character">
+                <div class="btn-group">
+                    <button class="btn btn-success dropdown-toggle" type="button" id="dropdownMenu6" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                        P1 Score
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu6" id="p1Score">
+                        <li><a href="#" data-><a href="#" data-value="0">0</a></li>
+                        <li><a href="#" data-><a href="#" data-value="1">1</a></li>
+                        <li><a href="#" data-><a href="#" data-value="2">2</a></li>
+                        <li><a href="#" data-><a href="#" data-value="3">3</a></li>
+                    </ul>
+                </div>
+                <span class="label label-success" id="p1label"></span>
+            </div>
+            <div class="player-score">
+                <div class="player2-score">
+                    <span class="label label-danger" id="p2label"></span>
+                    <div class="btn-group">
+                        <button class="btn btn-danger dropdown-toggle" type="button" id="dropdownMenu7" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                            P2 Score
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu7" id="p2Score">
+                            <li><a href="#" data-><a href="#" data-value="0">0</a></li>
+                            <li><a href="#" data-><a href="#" data-value="1">1</a></li>
+                            <li><a href="#" data-><a href="#" data-value="2">2</a></li>
+                            <li><a href="#" data-><a href="#" data-value="3">3</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br/><br/><br/>
+
+        <div class="character-select" id="characterSelect">
+            <div id="player1" class="player-character">
+                <div id="wrapper1" class="player-character">
+                    <ol id="selectable">
+                    </o>
+                </div>
+
+            </div>
+
+            <div id="player2" class="player2-character">
+                <div class="player-character">
+                    <ol id="selectable2">
+                    </o>
+                </div>
+            </div>
+        </div>
+        </div>
+        <br/> <br/>
+        <div class="container">
+            <iframe frameborder="0" scrolling="no" id="chat_embed" src="{{ config.TWITCH_CHAT }}" height="500" width="350"></iframe>
+        </div>
+    </body>
+</html>
